@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: '2010-09-09' 
+Description: Pipeline DevSecOps Itau 
+Parameters: 
+  Projeto: 
+    Description: Nome do Projeto 
+    Type: String 
+    Default: python-hello
+
+  CMKARN: 
+    Description: Conta de Producao 
+    Type:  String
+    Default: cmkarm
+ 
+Resources: 
+ 
+  BuildProjectRole: 
+    Type: AWS::IAM::Role 
+    Properties: 
+      RoleName: !Sub RoleCodeBuildRole
+      AssumeRolePolicyDocument: 
+        Version: 2012-10-17 
+        Statement: 
+          - 
+            Effect: Allow 
+            Principal: 
+              Service: 
+                - codebuild.amazonaws.com 
+            Action: 
+              - sts:AssumeRole 
+      Path: / 
+  BuildProjectPolicy: 
+    Type: AWS::IAM::Policy 
+    Properties: 
+      PolicyDocument: 
+        Statement: 
+          - Action: 
+              - ecr:GetAuthorizationToken 
+              - logs:CreateLogGroup 
+              - logs:CreateLogStream 
+              - logs:PutLogEvents 
+            Effect: Allow 
+            Resource: '*' 
+          - Action: 
+              - kms:Decrypt 
+              - kms:Encrypt 
+              - kms:* 
+            Effect: Allow 
+            Resource: '*'
+          - Action: 
+              - ssm:GetParameters 
+            Effect: Allow 
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*' 
+          - Action: 
+              - s3:PutObject 
+              - s3:GetObject 
+              - s3:GetObjectVersion 
+              - s3:GetBucketPolicy 
+              - s3:ListBucket 
+              - s3:GetBucketAcl 
+              - s3:GetBucketLocation 
+            Effect: Allow 
+            Resource:  
+              - !Sub arn:aws:s3:::${Projeto}-bucket 
+              - !Sub arn:aws:s3:::${Projeto}-bucket/* 
+              - !Sub arn:aws:s3:::devsecops-fortify
+              - !Sub arn:aws:s3:::devsecops-fortify/*
+          - Action:  
+              - codecommit:GitPull 
+              - codecommit:CancelUploadArchive 
+              - codecommit:GetBranch 
+              - codecommit:GetCommit 
+              - codecommit:GetUploadArchiveStatus 
+              - codecommit:UploadArchive 
+            Effect: Allow 
+            Resource: 
+              - !Sub arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${Projeto} 
+          - Action: 
+              - ecr:InitiateLayerUpload 
+              - ecr:UploadLayerPart 
+              - ecr:PutImage 
+              - ecr:CompleteLayerUpload 
+              - ecr:BatchCheckLayerAvailability 
+              - ecr:DescribeImages 
+              - ecr:DescribeRepositories 
+              - ecr:BatchGetImage 
+              - ecr:GetDownloadUrlForLayer 
+              - ecr:GetRepositoryPolicy 
+              - ecr:ListImages 
+            Effect: Allow 
+            Resource:  
+              - "*"
+ 
+      PolicyName: Policy-Codebuild 
+      Roles: 
+        - !Ref 'BuildProjectRole' 
+ 
+ 
+  PipeLineRole: 
+    Type: AWS::IAM::Role 
+    Properties: 
+      RoleName: !Sub RoleCodepipelineRole 
+      AssumeRolePolicyDocument: 
+        Version: 2012-10-17 
+        Statement: 
+          - 
+            Effect: Allow 
+            Principal: 
+              Service: 
+                - codepipeline.amazonaws.com 
+            Action: 
+              - sts:AssumeRole 
+      Path: / 
+  PipelinePolicy: 
+    Type: AWS::IAM::Policy 
+    Properties: 
+      PolicyName: !Sub ${Projeto}-codepipeline-policy 
+      PolicyDocument: 
+        Version: 2012-10-17 
+        Statement: 
+          - 
+            Effect: Allow 
+            Action: 
+              - codepipeline:* 
+              - iam:ListRoles 
+              - cloudformation:Describe* 
+              - cloudFormation:List* 
+              - codecommit:List* 
+              - codecommit:Get* 
+              - codecommit:GitPull 
+              - codecommit:UploadArchive 
+              - codecommit:CancelUploadArchive 
+              - codebuild:BatchGetBuilds 
+              - codebuild:StartBuild 
+              - cloudformation:CreateStack 
+              - cloudformation:DeleteStack 
+              - cloudformation:DescribeStacks 
+              - cloudformation:UpdateStack 
+              - cloudformation:CreateChangeSet 
+              - cloudformation:DeleteChangeSet 
+              - cloudformation:DescribeChangeSet 
+              - cloudformation:ExecuteChangeSet 
+              - cloudformation:SetStackPolicy 
+              - cloudformation:ValidateTemplate 
+              - iam:PassRole 
+              - s3:ListAllMyBuckets 
+              - s3:GetBucketLocation 
+              - s3:PutObject 
+              - s3:GetBucketPolicy 
+              - s3:GetObject 
+              - s3:ListBucket 
+
+            Resource: 
+              - "*" 
+          - 
+            Effect: Allow 
+            Action: 
+              - kms:Decrypt 
+            Resource: "*"
+ 
+          - Action:  
+              - codecommit:GitPull 
+              - codecommit:CancelUploadArchive 
+              - codecommit:GetBranch 
+              - codecommit:GetCommit 
+              - codecommit:GetUploadArchiveStatus 
+              - codecommit:UploadArchive 
+            Effect: Allow 
+            Resource: 
+              - !Sub arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${Projeto} 
+          - 
+            Effect: Allow 
+            Action: 
+              - kms:* 
+            Resource: "*"
+      Roles: 
+        - 
+          !Ref PipeLineRole 
+ 

@@ -1,0 +1,450 @@
+{
+    "Resources": {
+        "Build": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "linuxdockerhub",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "Build",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/python37/build/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "DeployECS": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "aws/codebuild/standard:2.0",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "DeployECS",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/common/deploy/buildspec_ecs.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "PipelinePythonReports": {
+            "Type": "AWS::S3::Bucket"
+        },
+        "PipelineTest": {
+            "Properties": {
+                "ArtifactStore": {
+                    "Location": {
+                        "Ref": "PipelinePythonReports"
+                    },
+                    "Type": "S3"
+                },
+                "RoleArn": "arn:aws:iam::033921349789:role/RoleCodepipelineRole",
+                "Stages": [
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "master",
+                                    "RepositoryName": "teste"
+                                },
+                                "Name": "SourceApp",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "Source"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Build",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Build"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "TestUnit",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "TestUnit"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Sast",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Sast"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Sonar",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Sonar"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Aqua",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Aqua"
+                                    }
+                                ],
+                                "RunOrder": "2"
+                            }
+                        ],
+                        "Name": "CI"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Publish",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Publish"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "Publish"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "SourceApp",
+                                    "ProjectName": "CODEBUILDteste"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "SourceApp"
+                                    }
+                                ],
+                                "Name": "Deploy",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Deploy"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "Deploy"
+                    }
+                ]
+            },
+            "Type": "AWS::CodePipeline::Pipeline"
+        },
+        "PublishECR": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "aws/codebuild/standard:2.0",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "PublishECR",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/common/publish/buildspec_ecr.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "SAST": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "linuxdockerhub",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "SAST",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/python37/build/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "SONAR": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "linuxdockerhub",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "SONAR",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/python37/build/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "TestUnit": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "Var1",
+                            "Value": "Var2"
+                        }
+                    ],
+                    "Image": "linuxdockerhub",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "TestUnit",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/python37/build/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        "sg-56391a7c"
+                    ],
+                    "Subnets": [
+                        "subnet-035ab95c",
+                        "subnet-4c518942"
+                    ],
+                    "VpcId": "vpc-bb0436c1"
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        }
+    }
+}

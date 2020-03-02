@@ -1,0 +1,13 @@
+---
+version: 1
+template: app-ecs
+runtime: python37
+Parameter:
+    - Projeto: Pipeline-Python
+    - Branch: master
+pipeline:
+    - source
+    - ci
+    - security
+    - publish
+    - deploy
