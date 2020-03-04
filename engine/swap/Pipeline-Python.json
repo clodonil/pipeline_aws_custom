@@ -1,0 +1,319 @@
+{
+    "Resources": {
+        "PipelinePythonReports": {
+            "Type": "AWS::S3::Bucket"
+        },
+        "PipelineTest": {
+            "Properties": {
+                "ArtifactStore": {
+                    "Location": {
+                        "Ref": "PipelinePythonReports"
+                    },
+                    "Type": "S3"
+                },
+                "RoleArn": "arn:aws:iam::033921349789:role/RoleCodepipelineRole",
+                "Stages": [
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "release-1",
+                                    "RepositoryName": "sharedlibrary"
+                                },
+                                "Name": "SharedLibrary",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "master",
+                                    "RepositoryName": "App"
+                                },
+                                "Name": "App",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "master",
+                                    "RepositoryName": "Tools"
+                                },
+                                "Name": "Tools",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Tools"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "Source"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "Sast"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Sast",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Sast"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "Sonar"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Sonar",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Sonar"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "TestUnit"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "TestUnit",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "TestUnit"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "Build"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Build",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Build"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "testmultant"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "testmultant",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "testmultant"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "testmultant2"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "testmultant2",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "testmultant2"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "ci"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "Aqua"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Aqua",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Aqua"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "security"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "PublishECR"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "PublishECR",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "PublishECR"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "publish"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "DeployECS"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "DeployECS",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "DeployECS"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "deploy"
+                    }
+                ]
+            },
+            "Type": "AWS::CodePipeline::Pipeline"
+        }
+    }
+}

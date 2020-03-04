@@ -4,22 +4,28 @@ template: app-ecs
 runtime: python37
 Parameter:
     - Projeto: Pipeline-Python
-    - Branch: master
 pipeline:
-    - source
+    - source:
+        - BranchName: master
+        - RepositoryName: App
+    - source:
+        - BranchName: master
+        - RepositoryName: Tools            
     - ci::custom:
         - testmultant:
             - source: build
             - environment:
-                - chave : valor
+                - Name : chave
+                - Value: valor
             - imagecustom: linuxcustom
             - runorder: 1
         - testmultant2:
             - source: build
             - environment:
-                - chave : valor
+                - Name : chave
+                - Value: valor
             - imagecustom: linuxcustom
-            - runorder: 2           
+            - runorder: 2      
     - security
     - publish
     - deploy

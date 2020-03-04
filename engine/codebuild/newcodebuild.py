@@ -1,7 +1,6 @@
 from troposphere.codebuild import Artifacts, Environment, Source, Project, VpcConfig
 from troposphere import Template
 
-
 class NewCodeBuild:
      def __init__(self, roleCodeBuild, kMSKeyArn, vpcid, privatesubnetOne, privatesubnetTwo, sgpipeline):
          self.roleCodeBuild = roleCodeBuild
@@ -62,12 +61,12 @@ class NewCodeBuild:
 
      def Sast(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
-         sast = self.create_codebuild('SAST', env, 'linuxdockerhub',f'/{runtime}/build/buildspec.yml')                
+         sast = self.create_codebuild('Sast', env, 'linuxdockerhub',f'/{runtime}/build/buildspec.yml')                
          return sast
 
      def Sonar(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
-         sonar = self.create_codebuild('SONAR', env, 'linuxdockerhub',f'/{runtime}/build/buildspec.yml')
+         sonar = self.create_codebuild('Sonar', env, 'linuxdockerhub',f'/{runtime}/build/buildspec.yml')
          return sonar
 
      def TestUnit(self, runtime):
@@ -81,61 +80,32 @@ class NewCodeBuild:
          build = self.create_codebuild('Build', env, 'linuxdockerhub',f'/{runtime}/build/buildspec.yml')
          return build
 
-     def Deploy_ECS(self, env):
-         code = []
-         if env == 'dev':
-            env = {"Name" : "Var1","Value": 'Var2'}
-            code.append(self.create_codebuild('DeployECS', env, False,'/common/deploy/buildspec_ecs.yml'))
-         elif env == 'prod':   
-             code.append(self.create_codebuild('DeployECS', env, False,'/common/deploy/buildspec_ecs.yml'))
-             code.append(self.create_codebuild('DeployECS', env, False,'/common/deploy/buildspec_ecs.yml'))
-         return code
-
-     def Deploy_EKS(self, env):
+     def DeployECS(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
-         code = []
-         if env == 'dev':
-            code.append(self.create_codebuild('DeployEKS',  env, False,'/common/deploy/buildspec_eks.yml'))
-         elif env == 'prod':   
-            code.append(self.create_codebuild('DeployEKS',  env, False,'/common/deploy/buildspec_eks.yml'))
-            code.append(self.create_codebuild('DeployEKS', env, False,'/common/deploy/buildspec_eks.yml'))
-         return code
+         deploy_ecs = self.create_codebuild('DeployECS', env, False,'/common/deploy/buildspec_ecs.yml')
+         return deploy_ecs
 
-     def Deploy_Lambda(self):
+     def DeployEKS(self, runtime):
+         env = {"Name" : "Var1","Value": 'Var2'}
+         deploy_eks = self.create_codebuild('DeployEKS', env, False,'/common/deploy/buildspec_eks.yml')
+         return deploy_eks
+
+     def DeployLambda(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
          lambdas = self.create_codebuild('DeployLambda', env, False,'common/deploy/buildspec_lambda.yml')
          return lambdas
 
-     def Publish_ECR(self):
+     def PublishECR(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
          ecr = self.create_codebuild('PublishECR', env, False,'/common/publish/buildspec_ecr.yml')                
-         return [ecr]
+         return ecr
 
-     def Publish_S3(self):
+     def PublishS3(self):
          env = {"Name" : "Var1","Value": 'Var2'}
          s3 = self.create_codebuild('PublishS3', env, False,'/common/publish/buildspec_s3.yml')
          return s3
 
-     def Security(self):
+     def Aqua(self, runtime):
          env = {"Name" : "Var1","Value": 'Var2'}
          aqua = self.create_codebuild('Aqua', env, 'imagem_do_docker_aqua','/common/aqua/buildspec.yml')
-         return [aqua]
-
-     def new_app_ecs(self, name, runtime, env):
-        if name == 'ci':
-           sast = self.Sast(runtime)
-           sonar = self.Sonar(runtime)
-           testunit = self.TestUnit(runtime)
-           build = self.Build(runtime)
-           return [ sast, sonar, testunit, build ]
-
-        elif name == 'security':
-            return self.Security()
-
-        elif name == 'publish':
-            return self.Publish_ECR()
-
-        elif name == 'deploy':
-            return self.Deploy_ECS(env)
-        return []    
-
+         return aqua

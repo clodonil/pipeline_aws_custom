@@ -23,7 +23,7 @@ class NewPipeline:
                 ActionTypeId=typeId,
                 InputArtifacts=[InputArtifacts(Name=config.pop('InputArtifacts'))],
                 OutputArtifacts=[OutputArtifacts(Name=name)],
-                Configuration= configuration,
+                Configuration= config,
                 RunOrder=runorder
             )
 
