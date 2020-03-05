@@ -13,19 +13,19 @@ pipeline:
         - RepositoryName: Tools            
     - ci::custom:
         - testmultant:
-            - source: build
+            - source: Build
             - environment:
                 - Name : chave
                 - Value: valor
             - imagecustom: linuxcustom
-            - runorder: 1
+            - runorder: 2
         - testmultant2:
-            - source: build
+            - source: Build
             - environment:
                 - Name : chave
                 - Value: valor
             - imagecustom: linuxcustom
-            - runorder: 2      
+            - runorder: 3     
     - security
     - publish
     - deploy

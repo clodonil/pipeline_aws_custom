@@ -11,11 +11,29 @@ pipeline:
     - ci
     - security
     - publish
-    - custom:
-        - seguranca2:
-            - source: build
+    - custom::Seguranca:
+        - seguranca1:
+            - source: Build
             - environment:
-                - chave : valor
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 1
+        - seguranca3:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 2           
+
+    - custom::Segurancaf:
+        - seguranca2:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
             - imagecustom: linuxcustom
             - runorder: 1           
+
     - deploy

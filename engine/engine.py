@@ -1,8 +1,8 @@
-from codepipeline.pipeline import NewPipeline
-from codebuild.newcodebuild import NewCodeBuild
-from templates.pipeline_template import NewTemplate
-from tools.s3 import upload_file_s3
-from tools.cloudformation import deploy
+from .codepipeline.pipeline import NewPipeline
+from .codebuild.newcodebuild import NewCodeBuild
+from .templates.pipeline_template import NewTemplate
+from .tools.s3 import upload_file_s3
+from .tools.cloudformation import deploy
 
 import yaml
 
@@ -33,9 +33,3 @@ class Engine:
 
         # Deploy
         deploy(params['Projeto'], file_template)
-        
-
-
-pipeline = Engine()
-retorno = pipeline.make_pipeline('/home/clodonil/Workspace/pipeline_aws_custom/playload_custom1.yml')
-

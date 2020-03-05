@@ -6,7 +6,9 @@ Parameter:
     - Projeto: Pipeline-Python
     - Branch: master
 pipeline:
-    - source
+    - source:
+        - BranchName: master
+        - RepositoryName: App
     - ci
     - security
     - publish

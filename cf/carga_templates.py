@@ -39,13 +39,32 @@ if __name__ == "__main__":
 
    template = { 'name' : 'app-ecs',
                 'details' : {
-                             '1.source'   : [],
-                             '2.ci'       : ['Sast', 'Sonar', 'TestUnit', 'Build'],
-                             '3.security' : ['Aqua'],
-                             '4.publish'  : ['PublishECR'],
-                             '5.deploy'   : ['DeployECS']
+                             '1-source'   : [],
+                             '2-ci'       : [
+                                               {'Sast':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App', 'runorder': '1'}}, 
+                                               {'Sonar':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1'}}, 
+                                               {'TestUnit':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1'}}, 
+                                               {'Build':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1'}}
+                                               ],
+                             '3-security' : [
+                                              {'Aqua': {'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1' }}
+                                            ],
+                             '4-publish'  : [
+                                              {'PublishECR':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1' }}
+                                            ],
+                             '5-deploy'   : [
+                                              {'DeployECS':{'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App','runorder': '1' }}
+                                            ]
                            }
    }
 
+   print(template)
    newtemplate = DyConnect('pipeline-custom-templates','us-east-1', 'http://localhost:4569')
    newtemplate.dynamodb_save(template, True)
+
+
+
+
+       
+
+
