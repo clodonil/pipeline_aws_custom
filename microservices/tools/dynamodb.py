@@ -1,3 +1,6 @@
+"""
+Tools de integração com o Dynamodb
+"""
 import boto3
 import botocore
 import logging
@@ -9,14 +12,13 @@ import os
 
 
 class DyConnect:
-    def __init__(self, table, region="", endpoint=""):
+    def __init__(self, table, region):
         self.table = table
         self.region = region
-        self.endpoint = endpoint
 
     def connect(self):
         try:
-            dydb = boto3.resource('dynamodb',region_name=self.region, endpoint_url=self.endpoint)
+            dydb = boto3.resource('dynamodb', region_name=self.region)
             conn = dydb.Table(self.table)
             return conn
         except:
@@ -24,11 +26,10 @@ class DyConnect:
             logging.CRITICAL("Problema na conexao com DynamoDB")
             return False
 
-
-    def dynamodb_save(self,dados,new):
+    def dynamodb_save(self, dados):
         conn = self.connect()
-        retorno=conn.put_item(Item=dados)
-
+        if conn:
+           retorno = conn.put_item(Item=dados)
 
     def dynamodb_query(self, query):
         conn = self.connect()
