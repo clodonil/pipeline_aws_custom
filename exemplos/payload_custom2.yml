@@ -1,0 +1,42 @@
+---
+version: 1
+template: app-ecs
+runtime: python37
+provider: aws
+Parameter:
+    - Projeto: Pipeline-Python
+pipeline:
+    - source:
+        - BranchName: master
+        - RepositoryName: App
+    - ci
+    - security
+    - publish
+    - custom::Seguranca:
+        - seguranca1:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 1
+        - seguranca2:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 2           
+
+    - custom::Seguranca3:
+        - seguranca2:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 2
+    - deploy
+callback:
+    protocolo: email
+    endpoint: clodonil@nisled.org

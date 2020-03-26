@@ -1,0 +1,25 @@
+---
+Description: Estrutura do pipeline customizada
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  DyPipelines:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: wasabi-template-produced
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: name
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: wasabi-templates
