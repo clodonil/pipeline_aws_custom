@@ -4,8 +4,6 @@ from templates.codebuild.newcodebuild import NewCodeBuild
 from tools.dynamodb import DyConnect
 from tools.config import aws_region, dynamodb
 
-
-
 class NewTemplate:
     def __init__(self, template):
         self.template = template        
@@ -174,9 +172,9 @@ class NewTemplate:
         
         return stages            
 
-    def generate_pipeline(self, list_stages):
+    def generate_pipeline(self, list_stages, projeto, roles):
         pipeline = NewPipeline()
-        resource = pipeline.create_pipeline('PipelineTest','arn:aws:iam::033921349789:role/RoleCodepipelineRole', list_stages)
+        resource = pipeline.create_pipeline(projeto, roles, list_stages)
         return resource
 
     def save_swap(self, projeto, template):       
@@ -186,7 +184,7 @@ class NewTemplate:
 
         return filename     
 
-    def generate(self, runtime, env, stages, template_name, params):
+    def generate(self, runtime, env, stages, template_name, params, roles):
         resources = []
         list_action = {}
         pipeline_stages = self.get_dy_template(template_name)
@@ -203,7 +201,7 @@ class NewTemplate:
 
         # Pipeline
         resources.extend(list_codebuild)
-        resources.extend(self.generate_pipeline(list_stages))
+        resources.extend(self.generate_pipeline(list_stages,params['Projeto'], roles))
 
         # Template
         template = self.generate_template(resources)
