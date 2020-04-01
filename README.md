@@ -14,7 +14,7 @@ e assim gerando autonomia para os desenvolvedores.
 
 ## Templates
 
-O desenvolvimento da pipeline é realizada através do arquivo `pipeline.yml` no diretório  `pipelines`. A estrutura do arquivo deve
+O desenvolvimento da pipeline é realizada através do arquivo `pipeline.yml` no diretório  `pipeline`. A estrutura do arquivo deve
 seguir a seguinte estrutura:  
 
 ```
@@ -26,8 +26,7 @@ provider: aws
 Parameter:
     - Projeto: Pipeline-Python
 pipeline:
-    - source:
-       - RepositoryName: App
+    - source
     - ci
     - security
     - publish
@@ -141,7 +140,7 @@ pipeline:
     - deploy
 ```
 Para cada `action` é necessário ter um arquivo de `buildspec` que descreve os comandos que serão executado. Portanto é necessário 
-criar o arquivo com o `nome_do_stage_buildspec.yml` no diretório `pipelines`. No exemplo o arquivo ficaria com o seguinte nome `testmultant_buildspec.yml`.
+criar o arquivo com o `nome_do_stage_buildspec.yml` no diretório `pipeline`. No exemplo o arquivo ficaria com o seguinte nome `testmultant_buildspec.yml`.
 
 ### Adicinando um novo Stage
 
@@ -198,7 +197,7 @@ Utilize a `API` do `Wasabi` para fazer uma validação completa do template. Pod
 Após a validação validação do template, 
 
 ```
-git add pipelines/pipeline.yml
+git add pipeline/pipeline.yml
 git commit -am "wasabi.run()"
 ```
 
