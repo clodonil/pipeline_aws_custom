@@ -9,7 +9,7 @@ from daemonize import Daemonize
 import json
 import time
 
-pid = "/tmp/validate.pid"
+pid = "/tmp/deploy.pid"
 
 def main():
   while True:

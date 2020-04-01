@@ -13,6 +13,7 @@ def main():
    while True:
      try:
        for event in sqs_receive(filas['payload'] ):
+         print("Messagem consumida")
          template = json.loads(event.body)
          result = validate.check_template(template)
 

@@ -6,9 +6,17 @@ provider: aws
 Parameter:
     - Projeto: Pipeline-Python
 pipeline:
-    - source:
-       - RepositoryName: App
-    - ci
+    - source
+    - source::custom:
+        - RepositoryName: Tools
+    - ci::custom:
+        - testmultanty:
+            - source: Build
+            - environment:
+                - Name : chave
+                - Value: valor
+            - imagecustom: linuxcustom
+            - runorder: 2
     - security
     - publish
     - deploy

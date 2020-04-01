@@ -3,11 +3,13 @@ from templates.codepipeline.pipeline import NewPipeline
 from templates.codebuild.newcodebuild import NewCodeBuild
 from tools.dynamodb import DyConnect
 from tools.config import aws_region, dynamodb
+import os
 
 class NewTemplate:
-    def __init__(self, template):
+    def __init__(self, template, codepipeline_role, codebuild_role):
         self.template = template        
-        self.role = 'arn:aws:iam::033921349789:role/RoleCodeBuildRole'
+        self.codepipeline_role = codepipeline_role
+        self.codebuild_role = codebuild_role
         self.vpc = 'vpc-bb0436c1'
         self.subnet1 = 'subnet-035ab95c'
         self.subnet2 = 'subnet-4c518942'
@@ -27,7 +29,7 @@ class NewTemplate:
     def generate_codebuild(self, runtime, pipeline_template, stages):
         list_codebuild = []
         
-        codebuild = NewCodeBuild(self.role, 'aaa:aaa:aa',self.vpc,self.subnet1,self.subnet2, self.sg)
+        codebuild = NewCodeBuild(self.codebuild_role, 'aaa:aaa:aa',self.vpc,self.subnet1,self.subnet2, self.sg)
         cont_stage = 0
         action_custom = 1
         
@@ -47,7 +49,7 @@ class NewTemplate:
              stages_temp =[]
              
              # Customizando o action
-             if custom[-1] == 'custom':
+             if custom[-1] == 'custom' and custom[0] != 'source':
                 for list_yaml in t_codebuild[name_custom_stage]:                    
                     temp_name = list(list_yaml.keys())[0]
                     imagemcustom = False
@@ -63,7 +65,7 @@ class NewTemplate:
                             env = {}
                             for dic_params in params['environment']:
                                 env.update(dic_params)                        
-                    
+
                     configuration = {temp_name:{'ProjectName' : temp_name,'PrimarySource' : source, 'InputArtifacts': source, 'runorder': str(runorder)}}                    
                     stages_temp.append(configuration)                    
                     list_codebuild.append(codebuild.create_codebuild(temp_name, env, imagemcustom))
@@ -115,7 +117,7 @@ class NewTemplate:
             template.add_resource(resource)
         return template.to_json()    
 
-    def generate_sources(self, stages, env):
+    def generate_sources(self, stages, env, params):
         action = {}
         pipeline = NewPipeline()
 
@@ -123,19 +125,20 @@ class NewTemplate:
         action['source'] = [pipeline.create_action('SharedLibrary', "1",configuration, 'Source')]
 
         for t_codebuild in stages:
-            if 'source' in t_codebuild:
-                if len(t_codebuild['source']) == 1:
-                    configuration ={}
-                    configuration.update(t_codebuild['source'][0])
-                    configuration.update({'BranchName': env})
-                elif len(t_codebuild['source']) == 2:
-                    configuration.update(t_codebuild['source'][0])
-                    configuration.update(t_codebuild['source'][1])
+            if 'source' in t_codebuild or 'source::custom' in t_codebuild:
 
-                action['source'].append(pipeline.create_action(configuration['RepositoryName'], "1",configuration, 'Source'))
+               if t_codebuild == 'source':
+                  configuration ={'RepositoryName' : params['Projeto'], 'BranchName': env}
+               if 'source::custom' in t_codebuild:
+                  for config in t_codebuild['source::custom']:
+                      configuration.update(config)
+                  if not 'BranchName' in configuration:
+                      configuration.update({'BranchName': env})
+               action['source'].append(pipeline.create_action(configuration['RepositoryName'], "1",configuration, 'Source'))
+
         return action
 
-    def generate_action(self, list_codebuild, pipeline_template):
+    def generate_action(self, list_codebuild, pipeline_template, params):
         pipeline = NewPipeline()
         action ={}
         
@@ -145,7 +148,8 @@ class NewTemplate:
             for t in pipeline_template[k]:
               if title in t:                   
                 configuration = t[title]
-          
+          configuration['PrimarySource'] = params['Projeto']
+          configuration['InputArtifacts'] = params['Projeto']
           runorder = configuration.pop('runorder')
           configuration['ProjectName'] = title
           action[title] = pipeline.create_action(title, int(runorder) ,configuration, 'Build')
@@ -172,19 +176,23 @@ class NewTemplate:
         
         return stages            
 
-    def generate_pipeline(self, list_stages, projeto, roles):
+    def generate_pipeline(self, list_stages, projeto):
         pipeline = NewPipeline()
-        resource = pipeline.create_pipeline(projeto, roles, list_stages)
+        resource = pipeline.create_pipeline(projeto, self.codepipeline_role, list_stages)
         return resource
 
-    def save_swap(self, projeto, template):       
-        filename = f'swap/{projeto}.json'
-        with open(filename, 'w') as file:
+    def save_swap(self, projeto, template, env):
+        path = 'swap'
+        if not os.path.isdir(path):
+           os.mkdir(path)
+        if os.path.isdir(path):
+           filename = f'{path}/{projeto}-{env}.json'
+           print(filename)
+           with open(filename, 'w') as file:
              file.write(template)
+        return filename
 
-        return filename     
-
-    def generate(self, runtime, env, stages, template_name, params, roles):
+    def generate(self, runtime, env, stages, template_name, params):
         resources = []
         list_action = {}
         pipeline_stages = self.get_dy_template(template_name)
@@ -192,20 +200,20 @@ class NewTemplate:
         # create codebuild
         list_codebuild = self.generate_codebuild(runtime, pipeline_stages, stages )
 
-        # create action                
-        list_action.update(self.generate_sources(stages, env))
-        list_action.update(self.generate_action(list_codebuild, pipeline_stages))
+        # create action
+        list_action.update(self.generate_sources(stages, env, params))
+        list_action.update(self.generate_action(list_codebuild, pipeline_stages, params))
         
         # Stage
         list_stages = self.generate_stage(pipeline_stages, list_action)
 
         # Pipeline
         resources.extend(list_codebuild)
-        resources.extend(self.generate_pipeline(list_stages,params['Projeto'], roles))
+        resources.extend(self.generate_pipeline(list_stages,params['Projeto']))
 
         # Template
         template = self.generate_template(resources)
-        
+
         # Save swap
-        filename = self.save_swap(params['Projeto'], template)
+        filename = self.save_swap(params['Projeto'], template, env)
         return filename

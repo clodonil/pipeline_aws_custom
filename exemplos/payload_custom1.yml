@@ -6,9 +6,8 @@ provider: aws
 Parameter:
     - Projeto: Pipeline-Python
 pipeline:
-    - source:
-        - RepositoryName: App
-    - source:
+    - source
+    - source::custom:
         - BranchName: master
         - RepositoryName: Tools            
     - ci::custom:

@@ -1,11 +1,8 @@
 from troposphere import Parameter, Ref, Template, Sub
 from troposphere.s3 import Bucket, PublicRead
-
 from troposphere.codepipeline import (
     Pipeline, Stages, Actions, ActionTypeId, OutputArtifacts, InputArtifacts,
     ArtifactStore, DisableInboundStageTransitions)
-
-
 
 
 class NewPipeline:
@@ -50,17 +47,13 @@ class NewPipeline:
 
 
     def create_pipeline(self, name, role, list_stages):
-
         bucket_name = "PipelinePythonReports"
-
         s3bucket = Bucket(bucket_name)
-
+        name = name.replace('-','')
         pipeline = Pipeline(
-            name,            
-            RoleArn=role,
-            Stages = list_stages,
+            name,
+            RoleArn="arn:aws:iam::033921349789:role/RoleCodepipelineRole",
+            Stages=list_stages,
             ArtifactStore=ArtifactStore(Type="S3",Location=Ref(bucket_name))
         )
-
         return [s3bucket, pipeline]
-
