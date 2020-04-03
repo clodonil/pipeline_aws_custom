@@ -6,13 +6,15 @@ import sys
 import boto3
 import botocore
 
-cf = boto3.client('cloudformation') 
+cf = boto3.client('cloudformation')
 log = logging.getLogger('deploy.cf.create_or_update')
 
 
-def deploy(stack_name, template):
+def deploy(make):
     'Update or create stack'
-
+    name = make['url'].split('/')[-1].replace('.json','').replace('.','')
+    template = make['url']
+    stack_name = f'Wasabi-{name}'
     #template_data = _parse_template(template)
     parameter_data = []
 

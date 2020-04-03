@@ -6,16 +6,16 @@ from troposphere.codepipeline import (
 
 
 class NewPipeline:
-        
-    def create_action(self, name,runorder, configuration, type):
+
+    def create_action(self, name,runorder, configuration, type, role=""):
         config = configuration.copy()
         if type == 'Build':
-           provider = 'CodeBuild'
-           category = 'Build'
-           
-           typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
-           
-           action = Actions(
+            provider = 'CodeBuild'
+            category = 'Build'
+
+            typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
+
+            action = Actions(
                 Name=name,
                 ActionTypeId=typeId,
                 InputArtifacts=[InputArtifacts(Name=config.pop('InputArtifacts'))],
@@ -25,18 +25,29 @@ class NewPipeline:
             )
 
         elif type == 'Source':
-             provider = 'CodeCommit'
-             category = 'Source'
-           
-             typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
-             action = Actions(
+            provider = 'CodeCommit'
+            category = 'Source'
+
+            typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
+            if role:
+               action = Actions(
                  Name=name,
-                 ActionTypeId=typeId,                 
+                 ActionTypeId=typeId,
                  OutputArtifacts=[OutputArtifacts(Name=name)],
-                 Configuration= config,
+                 Configuration=config,
+                 RoleArn = role,
                  RunOrder=runorder
-            )
-        return action        
+               )
+            else:
+                action = Actions(
+                    Name=name,
+                    ActionTypeId=typeId,
+                    OutputArtifacts=[OutputArtifacts(Name=name)],
+                    Configuration=config,
+                    RunOrder=runorder
+                )
+
+        return action
 
     def create_stage(self, name, list_actions):
         stage = Stages (
@@ -49,10 +60,11 @@ class NewPipeline:
     def create_pipeline(self, name, role, list_stages):
         bucket_name = "PipelinePythonReports"
         s3bucket = Bucket(bucket_name)
-        name = name.replace('-','')
+        title = name.replace('-',' ').title().replace(' ','')
         pipeline = Pipeline(
-            name,
-            RoleArn="arn:aws:iam::033921349789:role/RoleCodepipelineRole",
+            title=title,
+            Name=name,
+            RoleArn=role,
             Stages=list_stages,
             ArtifactStore=ArtifactStore(Type="S3",Location=Ref(bucket_name))
         )

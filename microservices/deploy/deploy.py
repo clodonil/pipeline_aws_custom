@@ -13,15 +13,17 @@ pid = "/tmp/deploy.pid"
 
 def main():
   while True:
-    try:
+    #try:
       for event in sqs_receive(filas['deploy'] ):
         make = json.loads(event.body)
-        # Deploy
-        if deploy(make['pipelinename'], make['url']):
-           sqs_delete(event)
-    except:
-        print("erro no deploy")
-    time.sleep(polling_time)
 
-daemon = Daemonize(app="deploy", pid=pid, action=main, foreground=True)
-daemon.start()
+        # Deploy
+        if deploy(make):
+           sqs_delete(event)
+    #except:
+    #    print("erro no deploy")
+      time.sleep(polling_time)
+
+#daemon = Daemonize(app="deploy", pid=pid, action=main, foreground=True)
+#daemon.start()
+main()

@@ -6,10 +6,11 @@ from tools.config import aws_region, dynamodb
 import os
 
 class NewTemplate:
-    def __init__(self, template, codepipeline_role, codebuild_role):
+    def __init__(self, template, codepipeline_role, codebuild_role, DevSecOps_Role):
         self.template = template        
         self.codepipeline_role = codepipeline_role
         self.codebuild_role = codebuild_role
+        self.DevSecOps_Role = DevSecOps_Role
         self.vpc = 'vpc-bb0436c1'
         self.subnet1 = 'subnet-035ab95c'
         self.subnet2 = 'subnet-4c518942'
@@ -25,6 +26,16 @@ class NewTemplate:
                   return stages['Item']['details']
 
         return False        
+
+    def get_sharedlibrary_release(self):
+        newtemplate = DyConnect(dynamodb['template'],aws_region)
+        query = {'name': 'sharedlibrary'}
+        version = newtemplate.dynamodb_query(query)
+
+        if 'Item' in version:
+            return version['Item']['release']
+
+        return False
 
     def generate_codebuild(self, runtime, pipeline_template, stages):
         list_codebuild = []
@@ -117,12 +128,12 @@ class NewTemplate:
             template.add_resource(resource)
         return template.to_json()    
 
-    def generate_sources(self, stages, env, params):
+    def generate_sources(self, stages, env, params, role):
         action = {}
         pipeline = NewPipeline()
-
-        configuration = {'BranchName': 'release-1','RepositoryName' : 'sharedlibrary'}
-        action['source'] = [pipeline.create_action('SharedLibrary', "1",configuration, 'Source')]
+        release = self.get_sharedlibrary_release()
+        configuration = {'BranchName': release,'RepositoryName' : 'sharedlibrary', "PollForSourceChanges": "false"}
+        action['source'] = [pipeline.create_action('SharedLibrary', "1",configuration, 'Source',role)]
 
         for t_codebuild in stages:
             if 'source' in t_codebuild or 'source::custom' in t_codebuild:
@@ -181,27 +192,29 @@ class NewTemplate:
         resource = pipeline.create_pipeline(projeto, self.codepipeline_role, list_stages)
         return resource
 
-    def save_swap(self, projeto, template, env):
+    def save_swap(self, projeto, template, env, account):
         path = 'swap'
         if not os.path.isdir(path):
            os.mkdir(path)
         if os.path.isdir(path):
-           filename = f'{path}/{projeto}-{env}.json'
-           print(filename)
+           filename = f'{path}/{projeto}-{env}-{account}.json'
+
            with open(filename, 'w') as file:
              file.write(template)
         return filename
 
-    def generate(self, runtime, env, stages, template_name, params):
+    def generate(self, runtime, env, stages, template_name, params, account):
         resources = []
         list_action = {}
+        projeto_name = params['Projeto']
+        pipeline_name = f'{projeto_name}-{env}'
         pipeline_stages = self.get_dy_template(template_name)
 
         # create codebuild
         list_codebuild = self.generate_codebuild(runtime, pipeline_stages, stages )
 
         # create action
-        list_action.update(self.generate_sources(stages, env, params))
+        list_action.update(self.generate_sources(stages, env, params, self.DevSecOps_Role))
         list_action.update(self.generate_action(list_codebuild, pipeline_stages, params))
         
         # Stage
@@ -209,11 +222,11 @@ class NewTemplate:
 
         # Pipeline
         resources.extend(list_codebuild)
-        resources.extend(self.generate_pipeline(list_stages,params['Projeto']))
+        resources.extend(self.generate_pipeline(list_stages,pipeline_name))
 
         # Template
         template = self.generate_template(resources)
 
         # Save swap
-        filename = self.save_swap(params['Projeto'], template, env)
+        filename = self.save_swap(params['Projeto'], template, env, account)
         return filename

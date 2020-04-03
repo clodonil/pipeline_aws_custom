@@ -14,11 +14,12 @@ def main():
      try:
        for event in sqs_receive(filas['payload'] ):
          print("Messagem consumida")
-         template = json.loads(event.body)
+         payload = json.loads(event.body)
+         template = payload['payload']
          result = validate.check_template(template)
 
          if result['status']:
-           sqs_send(filas['processing'],template)
+           sqs_send(filas['processing'],payload)
            sqs_delete(event)
          else:
             pass
