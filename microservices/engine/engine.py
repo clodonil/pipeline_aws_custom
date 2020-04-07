@@ -15,6 +15,7 @@ def main():
         for event in sqs_receive(filas['processing']):
           print("Consumindo mensagem")
           payload = json.loads(event.body)
+          requestID = payload['requestID']
           account = payload['account']
           make = payload['payload']
           runtime = make['runtime']
@@ -33,7 +34,7 @@ def main():
 
           if upload_file_s3(s3_bucket, file_template):
              f_template = f"https://{s3_bucket}.s3.amazonaws.com/{file_template.split('/')[-1]}"
-             msg = {"url" : f_template, "account" : account, "pipelinename": params['Projeto']}
+             msg = {"url" : f_template, "account" : account, "pipelinename": params['Projeto'], 'requestID': requestID}
              sqs_send(filas['deploy'], msg)
              sqs_delete(event)
              try:

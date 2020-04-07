@@ -28,7 +28,7 @@ DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
 
 ### SSM
 
-vpcid = '/VPCID'
-subnet1 = '/SUBNET1'
-subnet2 = '/SUBNET2'
-sg = '/SG'
+vpcid = 'VPCID'
+subnet1 = 'SUBNET1'
+subnet2 = 'SUBNET2'
+sg = 'SG'

@@ -9,16 +9,25 @@ class NewPipeline:
 
     def create_action(self, name,runorder, configuration, type, role=""):
         config = configuration.copy()
+        ListInputArtifacts = []
         if type == 'Build':
             provider = 'CodeBuild'
             category = 'Build'
 
             typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
 
+            inputartifact = config.pop('InputArtifacts')
+
+            if isinstance(inputartifact, list):
+               for i_artifact in inputartifact:
+                   ListInputArtifacts.append(InputArtifacts(Name=i_artifact))
+            else:
+                ListInputArtifacts.append(InputArtifacts(Name=inputartifact))
+
             action = Actions(
                 Name=name,
                 ActionTypeId=typeId,
-                InputArtifacts=[InputArtifacts(Name=config.pop('InputArtifacts'))],
+                InputArtifacts=ListInputArtifacts,
                 OutputArtifacts=[OutputArtifacts(Name=name)],
                 Configuration= config,
                 RunOrder=runorder

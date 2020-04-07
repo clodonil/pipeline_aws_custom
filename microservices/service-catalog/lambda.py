@@ -1,6 +1,7 @@
 from tools.sqs import sqs_send
 from tools.config import filas
 import yaml
+import uuid
 import boto3
 import logging
 
@@ -78,7 +79,8 @@ filename = '../../exemplos/payload.yml'
 f_template = open(filename)
 yml_template = f_template.read()
 f_template.close()
-
+requestID = str(uuid.uuid1())
 template = change_yml_to_json(yml_template)
-payload = {'payload': template, 'account':account}
+payload = {'payload': template, 'account':account,'requestID': requestID}
+print(payload)
 sqs_send(filas['payload'], payload)

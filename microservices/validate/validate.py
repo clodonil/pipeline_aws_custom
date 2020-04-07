@@ -16,6 +16,7 @@ def main():
          print("Messagem consumida")
          payload = json.loads(event.body)
          template = payload['payload']
+
          result = validate.check_template(template)
 
          if result['status']:

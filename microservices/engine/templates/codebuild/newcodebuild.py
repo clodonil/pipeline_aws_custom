@@ -1,14 +1,14 @@
 from troposphere.codebuild import Artifacts, Environment, Source, Project, VpcConfig
-from troposphere import Template
+from troposphere import Template, Ref
 
 class NewCodeBuild:
-     def __init__(self, roleCodeBuild, kMSKeyArn, vpcid, privatesubnetOne, privatesubnetTwo, sgpipeline):
+     def __init__(self, roleCodeBuild, kMSKeyArn):
          self.roleCodeBuild = roleCodeBuild
          self.kMSKeyArn = kMSKeyArn
-         self.vpcid = vpcid
-         self.privatesubnetOne = privatesubnetOne
-         self.privatesubnetTwo = privatesubnetTwo
-         self.sgpipeline = sgpipeline
+         self.vpcid = Ref("VPCID")
+         self.privatesubnetOne = Ref("SUBNET1")
+         self.privatesubnetTwo = Ref("SUBNET2")
+         self.sgpipeline = Ref("SG")
          self.computeType='BUILD_GENERAL1_SMALL'
          self.image='aws/codebuild/standard:2.0'
          self.type='LINUX_CONTAINER'

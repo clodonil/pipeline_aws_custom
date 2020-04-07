@@ -1,9 +1,10 @@
-from troposphere import Template
+from troposphere import Template, Parameter
 from templates.codepipeline.pipeline import NewPipeline
 from templates.codebuild.newcodebuild import NewCodeBuild
 from tools.dynamodb import DyConnect
-from tools.config import aws_region, dynamodb
+from tools.config import aws_region, dynamodb, vpcid, subnet1, subnet2, sg
 import os
+
 
 class NewTemplate:
     def __init__(self, template, codepipeline_role, codebuild_role, DevSecOps_Role):
@@ -11,10 +12,6 @@ class NewTemplate:
         self.codepipeline_role = codepipeline_role
         self.codebuild_role = codebuild_role
         self.DevSecOps_Role = DevSecOps_Role
-        self.vpc = 'vpc-bb0436c1'
-        self.subnet1 = 'subnet-035ab95c'
-        self.subnet2 = 'subnet-4c518942'
-        self.sg = 'sg-56391a7c'
 
     def get_dy_template(self, template_name):
         newtemplate = DyConnect(dynamodb['template'],aws_region)
@@ -34,13 +31,38 @@ class NewTemplate:
 
         if 'Item' in version:
             return version['Item']['release']
-
         return False
+
+    def pipeline_parameter(self):
+
+        params_vpcid = Parameter(
+            "VPCID",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=vpcid
+        )
+        params_subnet1 = Parameter(
+            "SUBNET1",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=subnet1
+        )
+        params_subnet2 = Parameter(
+            "SUBNET2",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=subnet2
+        )
+        params_sg = Parameter(
+            "SG",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=sg
+        )
+
+        list_params = [params_vpcid, params_subnet1, params_subnet2, params_sg]
+        return list_params
 
     def generate_codebuild(self, runtime, pipeline_template, stages):
         list_codebuild = []
         
-        codebuild = NewCodeBuild(self.codebuild_role, 'aaa:aaa:aa',self.vpc,self.subnet1,self.subnet2, self.sg)
+        codebuild = NewCodeBuild(self.codebuild_role, 'aaa:aaa:aa')
         cont_stage = 0
         action_custom = 1
         
@@ -56,7 +78,7 @@ class NewTemplate:
 
           elif isinstance(t_codebuild, dict):
              name_custom_stage = list(t_codebuild.keys())[0]
-             custom = name_custom_stage.split('::')             
+             custom = name_custom_stage.split('::')
              stages_temp =[]
              
              # Customizando o action
@@ -122,8 +144,13 @@ class NewTemplate:
         
         return list_codebuild
 
-    def generate_template(self, resources ):
+    def generate_template(self, parameters, resources ):
         template = Template()
+        #paramter
+        for param in parameters:
+            template.add_parameter(param)
+
+        #resources
         for resource in resources:
             template.add_resource(resource)
         return template.to_json()    
@@ -157,14 +184,18 @@ class NewTemplate:
           title = code.title          
           for k in pipeline_template:
             for t in pipeline_template[k]:
-              if title in t:                   
+              if title in t:
                 configuration = t[title]
+
           configuration['PrimarySource'] = params['Projeto']
-          configuration['InputArtifacts'] = params['Projeto']
+          if isinstance(configuration['InputArtifacts'], list):
+             configuration['InputArtifacts'][0] = params['Projeto']
+          else:
+              if configuration['InputArtifacts'] == "REPOAPP":
+                 configuration['InputArtifacts'] = params['Projeto']
           runorder = configuration.pop('runorder')
           configuration['ProjectName'] = title
           action[title] = pipeline.create_action(title, int(runorder) ,configuration, 'Build')
-        
         return action  
 
     def generate_stage(self, pipeline_stages, list_action):
@@ -220,12 +251,15 @@ class NewTemplate:
         # Stage
         list_stages = self.generate_stage(pipeline_stages, list_action)
 
+        # Parameter
+        list_params = self.pipeline_parameter()
+
         # Pipeline
         resources.extend(list_codebuild)
         resources.extend(self.generate_pipeline(list_stages,pipeline_name))
 
         # Template
-        template = self.generate_template(resources)
+        template = self.generate_template(list_params, resources)
 
         # Save swap
         filename = self.save_swap(params['Projeto'], template, env, account)
