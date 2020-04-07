@@ -50,3 +50,9 @@ class Validate:
             msg = {'status': False, 'message': 'problema no arquivo yml'}
             return msg
 
+def change_yml_to_json(content):
+    try:
+        template_json = yaml.safe_load(content)
+        return template_json
+    except yaml.YAMLError as error:
+      return  {"message": str(error)}
