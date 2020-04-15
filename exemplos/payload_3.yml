@@ -9,14 +9,7 @@ pipeline:
     - source
     - source::custom:
         - RepositoryName: Tools
-    - ci::custom:
-        - testmultanty:
-            - source: Build
-            - environment:
-                - Name : chave
-                - Value: valor
-            - imagecustom: linuxcustom
-            - runorder: 2
+    - ci
     - security
     - publish
     - deploy

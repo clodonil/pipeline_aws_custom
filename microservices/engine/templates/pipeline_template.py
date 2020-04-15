@@ -1,222 +1,290 @@
-from troposphere import Template, Parameter
+from troposphere import Template, Parameter, ec2, Ref
 from templates.codepipeline.pipeline import NewPipeline
 from templates.codebuild.newcodebuild import NewCodeBuild
-from tools.dynamodb import DyConnect
-from tools.config import aws_region, dynamodb, vpcid, subnet1, subnet2, sg
+from tools.config import (
+    VPCID,
+    PrivateSubnetOne,
+    PrivateSubnetTwo,
+    DevAccount,
+    HomologAccount,
+    ProdAccount,
+    KMSKeyArn,
+    TokenAqua,
+    DevSecOpsAccount,
+    DevToolsAccount
+)
 import os
 
 
 class NewTemplate:
     def __init__(self, template, codepipeline_role, codebuild_role, DevSecOps_Role):
-        self.template = template        
+        self.template = template
         self.codepipeline_role = codepipeline_role
         self.codebuild_role = codebuild_role
         self.DevSecOps_Role = DevSecOps_Role
-
-    def get_dy_template(self, template_name):
-        newtemplate = DyConnect(dynamodb['template'],aws_region)
-        query = {'name':template_name}
-        stages = newtemplate.dynamodb_query(query)
-
-        if 'Item' in stages:
-            if 'details' in stages['Item']:
-                  return stages['Item']['details']
-
-        return False        
-
-    def get_sharedlibrary_release(self):
-        newtemplate = DyConnect(dynamodb['template'],aws_region)
-        query = {'name': 'sharedlibrary'}
-        version = newtemplate.dynamodb_query(query)
-
-        if 'Item' in version:
-            return version['Item']['release']
-        return False
 
     def pipeline_parameter(self):
 
         params_vpcid = Parameter(
             "VPCID",
             Type="AWS::SSM::Parameter::Value<String>",
-            Default=vpcid
+            Default=VPCID
         )
         params_subnet1 = Parameter(
-            "SUBNET1",
+            "PrivateSubnetOne",
             Type="AWS::SSM::Parameter::Value<String>",
-            Default=subnet1
+            Default=PrivateSubnetOne
         )
         params_subnet2 = Parameter(
-            "SUBNET2",
+            "PrivateSubnetTwo",
             Type="AWS::SSM::Parameter::Value<String>",
-            Default=subnet2
+            Default=PrivateSubnetTwo
         )
-        params_sg = Parameter(
-            "SG",
+        params_DevAccount = Parameter(
+            "DevAccount",
             Type="AWS::SSM::Parameter::Value<String>",
-            Default=sg
+            Default=DevAccount
+        )
+        params_HomologAccount = Parameter(
+            "HomologAccount",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=HomologAccount
+        )
+        params_ProdAccount = Parameter(
+            "ProdAccount",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=ProdAccount
+        )
+        params_KMSKeyArn = Parameter(
+            "KMSKeyArn",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=KMSKeyArn
+        )
+        params_TokenAqua = Parameter(
+            "TokenAqua",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=TokenAqua
+        )
+        params_DevSecOpsAccount = Parameter(
+            "DevSecOpsAccount",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=DevSecOpsAccount
+        )
+        params_DevToolsAccount = Parameter(
+            "DevToolsAccount",
+            Type="AWS::SSM::Parameter::Value<String>",
+            Default=DevToolsAccount
         )
 
-        list_params = [params_vpcid, params_subnet1, params_subnet2, params_sg]
+        list_params = [
+            params_vpcid,
+            params_subnet1,
+            params_subnet2,
+            params_DevAccount,
+            params_HomologAccount,
+            params_ProdAccount,
+            params_KMSKeyArn,
+            params_TokenAqua,
+            params_DevSecOpsAccount,
+            params_DevToolsAccount
+        ]
+
         return list_params
 
-    def generate_codebuild(self, runtime, pipeline_template, stages):
+    def getparams_codebuild(self, list_yaml):
+        retorno = {}
+        for params in list_yaml:
+            if 'source' in params:
+                retorno['source'] = params['source']
+            elif 'runorder' in params:
+                retorno['runorder'] = str(params['runorder'])
+            elif 'imagecustom' in params:
+                retorno['imagemcustom'] = params['imagecustom']
+            elif 'environment' in params:
+                env = {}
+                for dic_params in params['environment']:
+                    env.update(dic_params)
+                retorno['env'] = env
+        return retorno
+
+    def generate_codebuild(self, runtime, pipeline_template, stages, params, env):
+        projeto = params['Projeto']
+        featurename, microservicename = projeto.split('-')
         list_codebuild = []
-        
-        codebuild = NewCodeBuild(self.codebuild_role, 'aaa:aaa:aa')
+
+        buildcustom = False
+        if 'BuildCustom' in params:
+            if params['BuildCustom'] == 'True':
+               buildcustom = True
+
+
+
+        codebuild = NewCodeBuild(self.codebuild_role)
         cont_stage = 0
         action_custom = 1
-        
+
         for t_codebuild in stages:
-          stage_custom_used = False
-          if isinstance(t_codebuild, str):
-             t_build_template =  [ item for item in pipeline_template if item.split('-')[1] == t_codebuild ][0] 
-             if t_codebuild != 'source': 
-                for l_codebuild_template in pipeline_template[t_build_template]:
-                    for g_codebuild in l_codebuild_template:
-                       new_codebuild  =  eval('codebuild.' + g_codebuild +'(runtime)')                    
-                       list_codebuild.append(new_codebuild)
-
-          elif isinstance(t_codebuild, dict):
-             name_custom_stage = list(t_codebuild.keys())[0]
-             custom = name_custom_stage.split('::')
-             stages_temp =[]
-             
-             # Customizando o action
-             if custom[-1] == 'custom' and custom[0] != 'source':
-                for list_yaml in t_codebuild[name_custom_stage]:                    
-                    temp_name = list(list_yaml.keys())[0]
-                    imagemcustom = False
-                                            
-                    for params in list_yaml[temp_name]:
-                        if 'source' in params:
-                            source = params['source']
-                        elif 'runorder' in params:
-                            runorder = params['runorder']
-                        elif 'imagecustom' in params:    
-                            imagemcustom = params['imagecustom']
-                        elif 'environment' in params:
-                            env = {}
-                            for dic_params in params['environment']:
-                                env.update(dic_params)                        
-
-                    configuration = {temp_name:{'ProjectName' : temp_name,'PrimarySource' : source, 'InputArtifacts': source, 'runorder': str(runorder)}}                    
-                    stages_temp.append(configuration)                    
-                    list_codebuild.append(codebuild.create_codebuild(temp_name, env, imagemcustom))
-                
-                #Adicionando os codebuild do padrao
+            stage_custom_used = False
+            if isinstance(t_codebuild, str):
+                t_build_template = [item for item in pipeline_template if item.split('-')[1] == t_codebuild][0]
                 if t_codebuild != 'source':
-                   t_build_template =  [ item for item in pipeline_template if item.split('-')[1] == custom[0]][0]                                
-                   for l_codebuild_template in pipeline_template[t_build_template]:
-                     for g_codebuild in l_codebuild_template:                         
-                         new_codebuild  =  eval('codebuild.' + g_codebuild +'(runtime)')                    
-                         list_codebuild.append(new_codebuild)
-                   pipeline_template[t_build_template].extend(stages_temp)
-             
-             # Customizando o stage      
-             elif custom[0] == 'custom':
-                stage_custom_used = True 
-                stage_name = f'{cont_stage}.{action_custom}-{custom[1]}'
-                action_custom +=1
-                pipeline_template[stage_name] =[]
-                for list_yaml in t_codebuild[name_custom_stage]:
-                    temp_name = list(list_yaml.keys())[0]
-                    imagemcustom = False
-                                            
-                    for params in list_yaml[temp_name]:
-                        if 'source' in params:
-                            source = params['source']
-                        elif 'runorder' in params:
-                            runorder = params['runorder']
-                        elif 'imagecustom' in params:    
-                            imagemcustom = params['imagecustom']
-                        elif 'environment' in params:
-                            env = {}
-                            for dic_params in params['environment']:
-                                env.update(dic_params)                        
-                    
-                    configuration = {temp_name:{'ProjectName' : temp_name,'PrimarySource' : source, 'InputArtifacts': source, 'runorder': str(runorder)}}
-                    stages_temp.append(configuration)                    
-                    list_codebuild.append(codebuild.create_codebuild(temp_name, env, imagemcustom))                
-                pipeline_template[stage_name].extend(stages_temp)
+                    for l_codebuild_template in pipeline_template[t_build_template]:
+                        for g_codebuild in l_codebuild_template:
+                            new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom)')
+                            list_codebuild.append(new_codebuild)
 
-          if not stage_custom_used:
-             cont_stage +=1
-        
+            elif isinstance(t_codebuild, dict):
+                name_custom_stage = list(t_codebuild.keys())[0]
+                custom = name_custom_stage.split('::')
+                stages_temp = []
+
+                # Customizando o action
+                if custom[-1] == 'custom' and custom[0] != 'source':
+                    for list_yaml in t_codebuild[name_custom_stage]:
+                        temp_name = list(list_yaml.keys())[0]
+                        imagemcustom = False
+
+                        params = self.getparams_codebuild(list_yaml[temp_name])
+
+                        configuration = {
+                            temp_name: {
+                                'ProjectName': temp_name,
+                                'PrimarySource': params['source'],
+                                'InputArtifacts': params['source'],
+                                'runorder': params['runorder']
+                            }}
+                        stages_temp.append(configuration)
+                        list_codebuild.append(codebuild.create_codebuild(temp_name, params['env'], params['imagemcustom']))
+
+                    # Adicionando os codebuild do padrao
+                    if t_codebuild != 'source':
+                        t_build_template = [item for item in pipeline_template if item.split('-')[1] == custom[0]][0]
+                        for l_codebuild_template in pipeline_template[t_build_template]:
+                            for g_codebuild in l_codebuild_template:
+                                new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom)')
+                                list_codebuild.append(new_codebuild)
+                        pipeline_template[t_build_template].extend(stages_temp)
+
+                # Customizando o stage
+                elif custom[0] == 'custom':
+                    stage_custom_used = True
+                    stage_name = f'{cont_stage}.{action_custom}-{custom[1]}'
+                    action_custom += 1
+                    pipeline_template[stage_name] = []
+                    for list_yaml in t_codebuild[name_custom_stage]:
+                        temp_name = list(list_yaml.keys())[0]
+                        imagemcustom = False
+
+                        params = self.getparams_codebuild(list_yaml[temp_name])
+
+                        configuration = {
+                            temp_name: {'ProjectName': temp_name, 'PrimarySource': params['source'], 'InputArtifacts': params['source'],
+                                        'runorder': params['runorder']}}
+                        stages_temp.append(configuration)
+                        codebuildname = temp_name
+
+                        list_codebuild.append(codebuild.create_codebuild(codebuildname, params['env'], params['imagemcustom']))
+                    pipeline_template[stage_name].extend(stages_temp)
+
+            if not stage_custom_used:
+                cont_stage += 1
+
         return list_codebuild
 
-    def generate_template(self, parameters, resources ):
+    def generate_template(self, parameters, resources):
         template = Template()
-        #paramter
+        # paramter
         for param in parameters:
             template.add_parameter(param)
 
-        #resources
+        # resources
         for resource in resources:
             template.add_resource(resource)
-        return template.to_json()    
+        return template.to_json()
 
-    def generate_sources(self, stages, env, params, role):
+    def generate_sources(self, stages, env, reponame, role, sharedlibrary_release):
         action = {}
         pipeline = NewPipeline()
-        release = self.get_sharedlibrary_release()
-        configuration = {'BranchName': release,'RepositoryName' : 'sharedlibrary', "PollForSourceChanges": "false"}
-        action['source'] = [pipeline.create_action('SharedLibrary', "1",configuration, 'Source',role)]
+
+        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'sharedlibrary', "PollForSourceChanges": "false"}
+        action['source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
 
         for t_codebuild in stages:
             if 'source' in t_codebuild or 'source::custom' in t_codebuild:
+                if t_codebuild == 'source':
+                    configuration = {'RepositoryName': reponame, 'BranchName': env}
+                if 'source::custom' in t_codebuild:
+                    configuration = {}
+                    for config in t_codebuild['source::custom']:
+                        configuration.update(config)
 
-               if t_codebuild == 'source':
-                  configuration ={'RepositoryName' : params['Projeto'], 'BranchName': env}
-               if 'source::custom' in t_codebuild:
-                  for config in t_codebuild['source::custom']:
-                      configuration.update(config)
-                  if not 'BranchName' in configuration:
-                      configuration.update({'BranchName': env})
-               action['source'].append(pipeline.create_action(configuration['RepositoryName'], "1",configuration, 'Source'))
+                    if 'BranchName' not in configuration:
+                        configuration.update({'BranchName': env})
+                action['source'].append(
+                    pipeline.create_action(configuration['RepositoryName'], "1", configuration, 'Source'))
 
         return action
 
-    def generate_action(self, list_codebuild, pipeline_template, params):
-        pipeline = NewPipeline()
-        action ={}
-        
-        for code in list_codebuild:        
-          title = code.title          
-          for k in pipeline_template:
-            for t in pipeline_template[k]:
-              if title in t:
-                configuration = t[title]
+    def create_security_groups(self, projeto, branch):
 
-          configuration['PrimarySource'] = params['Projeto']
-          if isinstance(configuration['InputArtifacts'], list):
-             configuration['InputArtifacts'][0] = params['Projeto']
-          else:
-              if configuration['InputArtifacts'] == "REPOAPP":
-                 configuration['InputArtifacts'] = params['Projeto']
-          runorder = configuration.pop('runorder')
-          configuration['ProjectName'] = title
-          action[title] = pipeline.create_action(title, int(runorder) ,configuration, 'Build')
-        return action  
+        out_all_rule = ec2.SecurityGroupRule(
+            IpProtocol='TCP', FromPort=0, ToPort=65535, CidrIp='0.0.0.0/0'
+        )
+
+        sg = ec2.SecurityGroup(
+            'SG',
+            VpcId=Ref("VPCID"),
+            GroupName=f'{projeto}-{branch}',
+            GroupDescription = 'This security group is used to control access to the container',
+            SecurityGroupIngress = [out_all_rule]
+        )
+        return [sg]
+
+
+    def generate_action(self, list_codebuild, pipeline_template, reponame, env):
+        pipeline = NewPipeline()
+        action = {}
+        projeto = reponame.replace('-','').lower()
+        for code in list_codebuild:
+            title = code.title.lower()
+            title = title.replace(env.lower(),'').replace(projeto,'')
+            configuration = 0
+            for k in pipeline_template:
+                for t in pipeline_template[k]:
+                    code_template = list(t.keys())[0]
+                    if code_template.lower()  == title.lower():
+                        configuration = list(t.values())[0]
+
+            configuration['PrimarySource'] = reponame
+            if isinstance(configuration['InputArtifacts'], list):
+                configuration['InputArtifacts'][0] = reponame
+            else:
+                if configuration['InputArtifacts'] == "REPOAPP":
+                    configuration['InputArtifacts'] = reponame
+            runorder = configuration.pop('runorder')
+            configuration['ProjectName'] = title
+            action[title] = pipeline.create_action(title, int(runorder), configuration, 'Build')
+        return action
 
     def generate_stage(self, pipeline_stages, list_action):
         pipeline = NewPipeline()
         stages = []
-        
-        for t_stage in sorted(pipeline_stages):            
-            control_stage = t_stage.split('-')[1]            
+
+        for t_stage in sorted(pipeline_stages):
+            control_stage = t_stage.split('-')[1]
             if control_stage == 'source':
-               l_stage=[]
-               for stg in list_action[control_stage]:
-                   l_stage.append(stg)
-               stages.append(pipeline.create_stage('Source', l_stage))
+                l_stage = []
+                for stg in list_action[control_stage]:
+                    l_stage.append(stg)
+                stages.append(pipeline.create_stage('Source', l_stage))
             else:
-                l_stage=[]
+                l_stage = []
                 for stg in pipeline_stages[t_stage]:
-                    for name_stg in stg:                    
-                      l_stage.append(list_action[name_stg])
-                stages.append(pipeline.create_stage(control_stage, l_stage)) 
-        
-        return stages            
+                    for name_stg in stg:
+                        l_stage.append(list_action[name_stg.lower()])
+                stages.append(pipeline.create_stage(control_stage, l_stage))
+
+        return stages
 
     def generate_pipeline(self, list_stages, projeto):
         pipeline = NewPipeline()
@@ -226,28 +294,27 @@ class NewTemplate:
     def save_swap(self, projeto, template, env, account):
         path = 'swap'
         if not os.path.isdir(path):
-           os.mkdir(path)
+            os.mkdir(path)
         if os.path.isdir(path):
-           filename = f'{path}/{projeto}-{env}-{account}.json'
+            filename = f'{path}/{projeto}-{env}-{account}.json'
 
-           with open(filename, 'w') as file:
-             file.write(template)
+            with open(filename, 'w') as file:
+                file.write(template)
         return filename
 
-    def generate(self, runtime, env, stages, template_name, params, account):
+    def generate(self, runtime, env, stages, pipeline_stages, params, account, release):
         resources = []
         list_action = {}
         projeto_name = params['Projeto']
         pipeline_name = f'{projeto_name}-{env}'
-        pipeline_stages = self.get_dy_template(template_name)
 
         # create codebuild
-        list_codebuild = self.generate_codebuild(runtime, pipeline_stages, stages )
+        list_codebuild = self.generate_codebuild(runtime, pipeline_stages, stages, params, env)
 
         # create action
-        list_action.update(self.generate_sources(stages, env, params, self.DevSecOps_Role))
-        list_action.update(self.generate_action(list_codebuild, pipeline_stages, params))
-        
+        list_action.update(self.generate_sources(stages, env, params['Projeto'], self.DevSecOps_Role, release))
+        list_action.update(self.generate_action(list_codebuild, pipeline_stages, params['Projeto'], env))
+
         # Stage
         list_stages = self.generate_stage(pipeline_stages, list_action)
 
@@ -256,7 +323,8 @@ class NewTemplate:
 
         # Pipeline
         resources.extend(list_codebuild)
-        resources.extend(self.generate_pipeline(list_stages,pipeline_name))
+        resources.extend(self.generate_pipeline(list_stages, pipeline_name))
+        resources.extend(self.create_security_groups(params['Projeto'],env))
 
         # Template
         template = self.generate_template(list_params, resources)

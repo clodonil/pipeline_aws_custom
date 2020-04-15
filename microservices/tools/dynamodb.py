@@ -34,3 +34,24 @@ class DyConnect:
     def dynamodb_query(self, query):
         conn = self.connect()
         return conn.get_item(Key=query)
+
+
+def get_dy_template(template_name):
+    newtemplate = DyConnect(dynamodb['template'], aws_region)
+    query = {'name': template_name}
+    stages = newtemplate.dynamodb_query(query)
+
+    if 'Item' in stages:
+        if 'details' in stages['Item']:
+            return stages['Item']['details']
+
+    return False
+
+def get_sharedlibrary_release():
+    newtemplate = DyConnect(dynamodb['template'], aws_region)
+    query = {'name': 'sharedlibrary'}
+    version = newtemplate.dynamodb_query(query)
+
+    if 'Item' in version:
+        return version['Item']['release']
+    return False

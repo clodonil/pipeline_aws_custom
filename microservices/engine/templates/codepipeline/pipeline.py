@@ -1,35 +1,41 @@
-from troposphere import Parameter, Ref, Template, Sub
-from troposphere.s3 import Bucket, PublicRead
+from troposphere import Ref
+from troposphere.s3 import Bucket
 from troposphere.codepipeline import (
     Pipeline, Stages, Actions, ActionTypeId, OutputArtifacts, InputArtifacts,
-    ArtifactStore, DisableInboundStageTransitions)
+    ArtifactStore)
 
 
 class NewPipeline:
 
-    def create_action(self, name,runorder, configuration, type, role=""):
+    def create_action(self, name, runorder, configuration, type, role=""):
+        project_name = ''.join(e for e in name if e.isalnum())
         config = configuration.copy()
         ListInputArtifacts = []
         if type == 'Build':
             provider = 'CodeBuild'
             category = 'Build'
 
-            typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
+            typeId = ActionTypeId(
+                Category=category,
+                Owner="AWS",
+                Version="1",
+                Provider=provider)
 
             inputartifact = config.pop('InputArtifacts')
 
             if isinstance(inputartifact, list):
-               for i_artifact in inputartifact:
-                   ListInputArtifacts.append(InputArtifacts(Name=i_artifact))
+                for i_artifact in inputartifact:
+                    ListInputArtifacts.append(InputArtifacts(Name=i_artifact))
             else:
                 ListInputArtifacts.append(InputArtifacts(Name=inputartifact))
 
             action = Actions(
+                project_name,
                 Name=name,
                 ActionTypeId=typeId,
                 InputArtifacts=ListInputArtifacts,
                 OutputArtifacts=[OutputArtifacts(Name=name)],
-                Configuration= config,
+                Configuration=config,
                 RunOrder=runorder
             )
 
@@ -37,18 +43,25 @@ class NewPipeline:
             provider = 'CodeCommit'
             category = 'Source'
 
-            typeId=ActionTypeId(Category=category,Owner="AWS",Version="1",Provider=provider)
+            typeId = ActionTypeId(
+                Category=category,
+                Owner="AWS",
+                Version="1",
+                Provider=provider
+            )
             if role:
-               action = Actions(
-                 Name=name,
-                 ActionTypeId=typeId,
-                 OutputArtifacts=[OutputArtifacts(Name=name)],
-                 Configuration=config,
-                 RoleArn = role,
-                 RunOrder=runorder
-               )
+                action = Actions(
+                    project_name,
+                    Name=name,
+                    ActionTypeId=typeId,
+                    OutputArtifacts=[OutputArtifacts(Name=name)],
+                    Configuration=config,
+                    RoleArn=role,
+                    RunOrder=runorder
+                )
             else:
                 action = Actions(
+                    project_name,
                     Name=name,
                     ActionTypeId=typeId,
                     OutputArtifacts=[OutputArtifacts(Name=name)],
@@ -59,22 +72,26 @@ class NewPipeline:
         return action
 
     def create_stage(self, name, list_actions):
-        stage = Stages (
-            Name = name,
-            Actions = list_actions
+        project_name = ''.join(e for e in name if e.isalnum())
+        stage = Stages(
+            project_name,
+            Name=name,
+            Actions=list_actions
         )
         return stage
 
-
     def create_pipeline(self, name, role, list_stages):
-        bucket_name = "PipelinePythonReports"
-        s3bucket = Bucket(bucket_name)
-        title = name.replace('-',' ').title().replace(' ','')
+        bucket_name = f"{name}-reports"
+        project_name = ''.join(e for e in bucket_name if e.isalnum())
+
+        s3bucket = Bucket(project_name, BucketName=bucket_name.lower())
+
+        title = name.replace('-', ' ').title().replace(' ', '')
         pipeline = Pipeline(
             title=title,
             Name=name,
             RoleArn=role,
             Stages=list_stages,
-            ArtifactStore=ArtifactStore(Type="S3",Location=Ref(bucket_name))
+            ArtifactStore=ArtifactStore(Type="S3", Location=Ref(s3bucket))
         )
         return [s3bucket, pipeline]
