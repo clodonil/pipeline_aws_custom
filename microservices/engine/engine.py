@@ -58,8 +58,8 @@ def main():
                         "pipelinename": params['Projeto'],
                         'requestID': requestID
                     }
-                    #sqs_send(filas['deploy'], msg)
-                    #sqs_delete(event)
+                    sqs_send(filas['deploy'], msg)
+                    sqs_delete(event)
         #         try:
         #             os.remove(file_template)
         #         except IOError as error:
