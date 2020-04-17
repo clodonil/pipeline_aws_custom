@@ -2,7 +2,7 @@
 "details": {
                 "1-source": [],
                 "2-ci": [
-                    {"BuildSAST": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
+                    {"SAST": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
                     {"Sonar": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
                     {"BuildTestUnit": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
                     {"Build": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}}

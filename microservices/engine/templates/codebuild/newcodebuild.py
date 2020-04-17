@@ -22,22 +22,15 @@ class NewCodeBuild:
         )
         self.timeoutInMinutes = 10
 
-    def project_name(self, name):
-        p_name = []
-        #name =  f'Codebuild-{name}'
-        for letra in name.split('-'):
-            p_name.append(letra.capitalize())
-        name = '-'.join(p_name)
-        project_name = ''.join(e for e in name if e.isalnum())
-        return project_name
-
-    def create_codebuild(self, name, envs, imagecustom=False, buildspec=False,):
-        project_name = self.project_name(name)
+    def create_codebuild(self, title, name, envs, imagecustom=False, buildspec=False,):
+        project_name = title
         # imagem do codebuild
         if imagecustom:
             dockerimage = imagecustom
+            serviceRole = "SERVICE_ROLE"
         else:
             dockerimage = self.image
+            serviceRole = "CODEBUILD"
 
         # Path do codebuild
         if buildspec:
@@ -63,7 +56,7 @@ class NewCodeBuild:
             Type=self.type,
             EnvironmentVariables=envs,
             PrivilegedMode='true',
-            ImagePullCredentialsType = 'SERVICE_ROLE'
+            ImagePullCredentialsType = serviceRole
         )
 
         source = Source(
@@ -84,6 +77,13 @@ class NewCodeBuild:
         )
         return codebuild
 
+    def ImageCustom(self, title, imagecustom, runtime):
+        if title in imagecustom:
+            image = imagecustom[title][runtime] if runtime in imagecustom[title] else imagecustom[title]['all']
+        else:
+            image = False
+        return image
+
     def ControlVersion(self, **params):
         env = [
             {
@@ -91,17 +91,14 @@ class NewCodeBuild:
                 "Value" : params['runtime']
             }
         ]
+        title = 'ControlVersion'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-ControlVersion-{params['branchname']}"
-        controlversion = self.create_codebuild(
-            name,
-            env,
-            False,
-            f'common/controlversion/buildspec.yml'
-        )
+        controlversion = self.create_codebuild('ControlVersion', name, env, image, f'common/controlversion/buildspec.yml')
 
         return controlversion
 
-    def BuildSAST(self, **params):
+    def SAST(self, **params):
         env =[
             {
             'Name': 'VariablePath',
@@ -128,15 +125,10 @@ class NewCodeBuild:
                 'Value': params['featurename']
             }
         ]
-
-        name = f"{params['featurename']}-{params['microservicename']}-BuildSAST-{params['branchname']}"
-        sast = self.create_codebuild(
-            name,
-            env,
-            '984688426935.dkr.ecr.sa-east-1.amazonaws.com/appsec:latest',
-            f"../01/{params['runtime']}/sast/buildspec.yml"
-        )
-
+        title = 'SAST'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-SAST-{params['branchname']}"
+        sast = self.create_codebuild(title, name, env, image, f"../01/{params['runtime']}/sast/buildspec.yml")
         return sast
 
     def Sonar(self, **params):
@@ -154,13 +146,10 @@ class NewCodeBuild:
                 'Value': params['featurename']
             }
         ]
+        title = 'Sonar'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Sonar-{params['branchname']}"
-        sonar = self.create_codebuild(
-            name,
-            env,
-            '049557819541.dkr.ecr.sa-east-1.amazonaws.com/codebuild-sonar:latest',
-            f"../01/{params['runtime']}/sonarqube/buildspec.yml"
-        )
+        sonar = self.create_codebuild(title, name, env, image, f"../01/{params['runtime']}/sonarqube/buildspec.yml")
         return sonar
 
 
@@ -171,13 +160,10 @@ class NewCodeBuild:
         else:
             buildspec = f"../01/{params['runtime']}/testunit/buildspec.yml"
 
+        title = 'BuildTestUnit'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-BuildTestUnit-{params['branchname']}"
-        testunit = self.create_codebuild(
-            name,
-            env,
-            False,
-            buildspec
-        )
+        testunit = self.create_codebuild(title, name, env, image, buildspec)
         return testunit
 
     def Build(self, **params):
@@ -187,45 +173,31 @@ class NewCodeBuild:
         else:
             buildspec = f"../01/{params['runtime']}/build/buildspec.yml"
 
+        title = 'Build'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Build-{params['branchname']}"
-        build = self.create_codebuild(
-            name,
-            env,
-            False,
-            buildspec
-        )
+        build = self.create_codebuild(title, name, env, image, buildspec)
         return build
 
 
     def Aqua(self, **params):
         env = []
+        title = 'Aqua'
+        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Aqua-{params['branchname']}"
-        aqua = self.create_codebuild(
-            name,
-            env,
-            False,
-            '/common/aqua/buildspec.yml'
-        )
+        aqua = self.create_codebuild(title, name, env, image, '/common/aqua/buildspec.yml')
         return aqua
 
     def PublishECR(self, **params):
         env = []
+        image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(
-            name,
-            env,
-            False,
-            '/common/publish/buildspec_ecr.yml'
-        )
+        ecr = self.create_codebuild(f"PublishECR{params['branchname']}", name, env, image, '/common/publish/buildspec_ecr.yml')
         return ecr
 
     def DeployECS(self, **params):
         env = []
+        image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(
-            name,
-            env,
-            False,
-            '/common/deploy/buildspec_ecs.yml'
-        )
+        deploy_ecs = self.create_codebuild(f"DeployECS{params['branchname']}", name, env, image, '/common/deploy/buildspec_ecs.yml')
         return deploy_ecs

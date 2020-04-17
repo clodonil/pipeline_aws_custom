@@ -11,14 +11,13 @@ from tools.config import (
     KMSKeyArn,
     TokenAqua,
     DevSecOpsAccount,
-    DevToolsAccount
+    DevToolsAccount,
 )
 import os
 
 
 class NewTemplate:
-    def __init__(self, template, codepipeline_role, codebuild_role, DevSecOps_Role):
-        self.template = template
+    def __init__(self, codepipeline_role, codebuild_role, DevSecOps_Role):
         self.codepipeline_role = codepipeline_role
         self.codebuild_role = codebuild_role
         self.DevSecOps_Role = DevSecOps_Role
@@ -107,7 +106,7 @@ class NewTemplate:
                 retorno['env'] = env
         return retorno
 
-    def generate_codebuild(self, runtime, pipeline_template, stages, params, env):
+    def generate_codebuild(self, runtime, pipeline_template, stages, params, env, imageCustom):
         projeto = params['Projeto']
         featurename, microservicename = projeto.split('-')
         list_codebuild = []
@@ -116,8 +115,6 @@ class NewTemplate:
         if 'BuildCustom' in params:
             if params['BuildCustom'] == 'True':
                buildcustom = True
-
-
 
         codebuild = NewCodeBuild(self.codebuild_role)
         cont_stage = 0
@@ -130,7 +127,7 @@ class NewTemplate:
                 if t_codebuild != 'source':
                     for l_codebuild_template in pipeline_template[t_build_template]:
                         for g_codebuild in l_codebuild_template:
-                            new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom)')
+                            new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom, imageCustom=imageCustom)')
                             list_codebuild.append(new_codebuild)
 
             elif isinstance(t_codebuild, dict):
@@ -154,14 +151,14 @@ class NewTemplate:
                                 'runorder': params['runorder']
                             }}
                         stages_temp.append(configuration)
-                        list_codebuild.append(codebuild.create_codebuild(temp_name, params['env'], params['imagemcustom']))
+                        list_codebuild.append(codebuild.create_codebuild(temp_name, temp_name, params['env'], params['imagemcustom']))
 
                     # Adicionando os codebuild do padrao
                     if t_codebuild != 'source':
                         t_build_template = [item for item in pipeline_template if item.split('-')[1] == custom[0]][0]
                         for l_codebuild_template in pipeline_template[t_build_template]:
                             for g_codebuild in l_codebuild_template:
-                                new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom)')
+                                new_codebuild = eval(f'codebuild.{g_codebuild}(featurename=featurename,microservicename=microservicename,runtime=runtime,branchname=env, custom=buildcustom, imageCustom=imageCustom)')
                                 list_codebuild.append(new_codebuild)
                         pipeline_template[t_build_template].extend(stages_temp)
 
@@ -183,7 +180,7 @@ class NewTemplate:
                         stages_temp.append(configuration)
                         codebuildname = temp_name
 
-                        list_codebuild.append(codebuild.create_codebuild(codebuildname, params['env'], params['imagemcustom']))
+                        list_codebuild.append(codebuild.create_codebuild(codebuildname, codebuildname, params['env'], params['imagemcustom']))
                     pipeline_template[stage_name].extend(stages_temp)
 
             if not stage_custom_used:
@@ -206,7 +203,7 @@ class NewTemplate:
         action = {}
         pipeline = NewPipeline()
 
-        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'sharedlibrary', "PollForSourceChanges": "false"}
+        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false"}
         action['source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
 
         for t_codebuild in stages:
@@ -247,13 +244,14 @@ class NewTemplate:
         projeto = reponame.replace('-','').lower()
         for code in list_codebuild:
             title = code.title.lower()
-            title = title.replace(env.lower(),'').replace(projeto,'')
             configuration = 0
             for k in pipeline_template:
                 for t in pipeline_template[k]:
                     code_template = list(t.keys())[0]
-                    if code_template.lower()  == title.lower():
-                        configuration = list(t.values())[0]
+                    code_template_env = f"{code_template}{env}"
+                    if code_template.lower()  == title or code_template_env.lower()  == title:
+                       configuration = list(t.values())[0]
+
 
             configuration['PrimarySource'] = reponame
             if isinstance(configuration['InputArtifacts'], list):
@@ -266,7 +264,7 @@ class NewTemplate:
             action[title] = pipeline.create_action(title, int(runorder), configuration, 'Build')
         return action
 
-    def generate_stage(self, pipeline_stages, list_action):
+    def generate_stage(self, pipeline_stages, list_action, env):
         pipeline = NewPipeline()
         stages = []
 
@@ -281,7 +279,11 @@ class NewTemplate:
                 l_stage = []
                 for stg in pipeline_stages[t_stage]:
                     for name_stg in stg:
-                        l_stage.append(list_action[name_stg.lower()])
+                        name_stg = name_stg.lower()
+                        if name_stg in list_action:
+                           l_stage.append(list_action[name_stg])
+                        elif f'{name_stg}{env}'in list_action:
+                           l_stage.append(list_action[f'{name_stg}{env}'])
                 stages.append(pipeline.create_stage(control_stage, l_stage))
 
         return stages
@@ -302,21 +304,22 @@ class NewTemplate:
                 file.write(template)
         return filename
 
-    def generate(self, runtime, env, stages, pipeline_stages, params, account, release):
+    def generate(self, **tparams):
+        tp = tparams['tp']
         resources = []
         list_action = {}
-        projeto_name = params['Projeto']
-        pipeline_name = f'{projeto_name}-{env}'
+        projeto_name = tp['params']['Projeto']
+        pipeline_name = f"{projeto_name}-{tp['env']}"
 
         # create codebuild
-        list_codebuild = self.generate_codebuild(runtime, pipeline_stages, stages, params, env)
+        list_codebuild = self.generate_codebuild(tp['runtime'], tp['pipeline_stages'], tp['stages'], tp['params'], tp['env'], tp['imageCustom'])
 
         # create action
-        list_action.update(self.generate_sources(stages, env, params['Projeto'], self.DevSecOps_Role, release))
-        list_action.update(self.generate_action(list_codebuild, pipeline_stages, params['Projeto'], env))
+        list_action.update(self.generate_sources(tp['stages'], tp['env'], projeto_name, self.DevSecOps_Role, tp['release']))
+        list_action.update(self.generate_action(list_codebuild, tp['pipeline_stages'], projeto_name, tp['env']))
 
         # Stage
-        list_stages = self.generate_stage(pipeline_stages, list_action)
+        list_stages = self.generate_stage(tp['pipeline_stages'], list_action, tp['env'])
 
         # Parameter
         list_params = self.pipeline_parameter()
@@ -324,11 +327,11 @@ class NewTemplate:
         # Pipeline
         resources.extend(list_codebuild)
         resources.extend(self.generate_pipeline(list_stages, pipeline_name))
-        resources.extend(self.create_security_groups(params['Projeto'],env))
+        resources.extend(self.create_security_groups(projeto_name,tp['env']))
 
         # Template
         template = self.generate_template(list_params, resources)
 
         # Save swap
-        filename = self.save_swap(params['Projeto'], template, env, account)
+        filename = self.save_swap(projeto_name, template, tp['env'], tp['account'])
         return filename

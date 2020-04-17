@@ -24,11 +24,17 @@ RoleCodeBuild = "RoleCodeBuildRole"
 ### Codepipeline
 RoleCodePipeline = "RoleCodepipelineRole"
 
-DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
+DevSecOps_Role = "arn:aws:iam::000000000:role/DevOpsRole"
 
 ### SSM
 
-vpcid = '/VPCID'
-subnet1 = '/SUBNET1'
-subnet2 = '/SUBNET2'
-sg = '/SG'
+VPCID = '/Networking/VPCID'
+PrivateSubnetOne = '/Networking/PrivateSubnetOne'
+PrivateSubnetTwo = '/Networking/PrivateSubnetTwo'
+DevAccount = '/Accounts/Dev'
+HomologAccount = '/Accounts/Homolog'
+ProdAccount = '/Accounts/Prod'
+KMSKeyArn = '/Shared/KMSKeyArn'
+TokenAqua = '/Shared/TokenAqua'
+DevSecOpsAccount = '/Accounts/DevSecOps'
+DevToolsAccount = '/Accounts/DevTools'

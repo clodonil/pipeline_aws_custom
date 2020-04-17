@@ -3,7 +3,7 @@ from tools.s3 import upload_file_s3
 from tools.config import (filas, s3_bucket, RoleCodePipeline,
                           RoleCodeBuild, polling_time, DevSecOps_Role)
 from tools.sqs import sqs_receive, sqs_send, sqs_delete
-from tools.dynamodb import get_dy_template, get_sharedlibrary_release
+from tools.dynamodb import get_dy_template, get_sharedlibrary_release, get_imageCustom
 from daemonize import Daemonize
 import json
 import time
@@ -22,9 +22,7 @@ def main():
                 requestID = payload['requestID']
                 account = payload['account']
                 make = payload['payload']
-                runtime = make['runtime']
                 template = make['template']
-                stages = make['pipeline']
                 params = {}
                 for param in make['Parameter']:
                     params.update(param)
@@ -36,9 +34,20 @@ def main():
 
                 pipeline_stages = get_dy_template(template)
                 release = get_sharedlibrary_release()
+                imageCustom = get_imageCustom()
 
-                pipeline = NewTemplate(template, codepipeline_roles, codebuild_role, DevSecOps_Role)
-                file_template = pipeline.generate(runtime, 'dev', stages, pipeline_stages, params, account, release)
+                template_params = {
+                    'env': 'develop',
+                    'runtime': make['runtime'],
+                    'stages': make['pipeline'],
+                    'account': account,
+                    'pipeline_stages': pipeline_stages,
+                    'params': params,
+                    'release': release,
+                    'imageCustom': imageCustom
+                }
+                pipeline = NewTemplate(codepipeline_roles, codebuild_role, DevSecOps_Role)
+                file_template = pipeline.generate(tp=template_params)
 
                 if upload_file_s3(s3_bucket, file_template):
                     f_tp = file_template.split('/')[-1]
@@ -49,8 +58,8 @@ def main():
                         "pipelinename": params['Projeto'],
                         'requestID': requestID
                     }
-                    sqs_send(filas['deploy'], msg)
-                    sqs_delete(event)
+                    #sqs_send(filas['deploy'], msg)
+                    #sqs_delete(event)
         #         try:
         #             os.remove(file_template)
         #         except IOError as error:

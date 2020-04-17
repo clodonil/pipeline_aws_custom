@@ -9,6 +9,7 @@ import json
 import copy
 import time
 import os
+from tools.config import dynamodb, aws_region
 
 
 class DyConnect:
@@ -54,4 +55,13 @@ def get_sharedlibrary_release():
 
     if 'Item' in version:
         return version['Item']['release']
+    return False
+
+def get_imageCustom():
+    newtemplate = DyConnect(dynamodb['template'], aws_region)
+    query = {'name': 'imagecustom'}
+    version = newtemplate.dynamodb_query(query)
+
+    if 'Item' in version:
+        return version['Item']['details']
     return False

@@ -81,7 +81,6 @@ class TestCodePipeline:
         assert 'SourceApp' in cf['Resources']
         assert 1 == cf['Resources']['SourceApp']['RunOrder']
 
-
     def test_deve_retornar_um_Action_tipo_Build(self, params):
         action = params['action']
         pipeline  = NewPipeline()
