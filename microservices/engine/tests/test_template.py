@@ -62,6 +62,17 @@ class TestCodePipeline:
         }
         return imgcustom
 
+    @pytest.fixture
+    def payloads(self):
+        payload = [
+            'payload_1.yml',
+            'payload_2.yml',
+            'payload_3.yml',
+            'payload_4.yml',
+            'payload_5.yml',
+            'payload_6.yml',
+        ]
+        return payload
     def gerando_cloudformation(self, resource):
         cf = Template()
         if isinstance(resource, dict):
@@ -72,16 +83,18 @@ class TestCodePipeline:
         resource_json = json.loads(cf.to_json())
         return resource_json
 
-    def load_template(self, name_template):
+    def load_template(self, name_template, env):
         template_json = open('tests/payload/templates.json')
         json_template = template_json.read()
         template_json.close()
         template = json.loads(json_template)
 
         if template['name'] == name_template:
-            return template['details']
+            print(template['name'])
+            return template['details'][env]
 
     def load_yml(self, filename):
+        filename = f"tests/payload/{filename}"
         f_template = open(filename)
         yml_template = f_template.read()
         f_template.close()
@@ -108,25 +121,26 @@ class TestCodePipeline:
 
     def test_deve_retornar_codebuild_do_template_app_ecs_sem_buildCustomizado(self, params, imageCustom):
         for pipe in params['templates']:
+            env = 'develop'
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_1.yml')
+            template_pipeline = self.load_template(name_template, env)
+            make = self.load_yml('payload_1.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
             for param in make['Parameter']:
                 params.update(param)
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
+            cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, env, imageCustom)
             cf = self.gerando_cloudformation(cf_pipeline)
 
             print(cf['Resources'].keys())
             assert len(cf['Resources']) == 7
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSdevelop' in cf['Resources']
+            assert 'DeployECSDev' in cf['Resources']
             assert 'SAST' in cf['Resources']
-            assert 'PublishECRdevelop' in cf['Resources']
+            assert 'PublishECRDev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
             assert 'BuildTestUnit' in cf['Resources']
             assert '../01/python37/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
@@ -135,9 +149,10 @@ class TestCodePipeline:
 
     def test_deve_retornar_codebuild_do_template_app_ecs_com_buildCustomizado(self, params, imageCustom):
         for pipe in params['templates']:
+            env = 'develop'
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_1.yml')
+            template_pipeline = self.load_template(name_template, env)
+            make = self.load_yml('payload_1.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -145,16 +160,16 @@ class TestCodePipeline:
                 params.update(param)
             params['BuildCustom'] = 'True'
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
+            cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, env, imageCustom)
             cf = self.gerando_cloudformation(cf_pipeline)
 
             print(cf['Resources'].keys())
             assert len(cf['Resources']) == 7
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSdevelop' in cf['Resources']
+            assert 'DeployECSDev' in cf['Resources']
             assert 'SAST' in cf['Resources']
-            assert 'PublishECRdevelop' in cf['Resources']
+            assert 'PublishECRDev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
             assert 'BuildTestUnit' in cf['Resources']
             assert 'pipeline/buildspec_build.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
@@ -163,8 +178,8 @@ class TestCodePipeline:
     def test_deve_retornar_codebuild_do_template_app_ecs_com_action_customizado(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_5.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_5.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -174,14 +189,13 @@ class TestCodePipeline:
             cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
             templ_pipeline = 0
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'].keys())
             assert len(cf['Resources']) == 8
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSdevelop' in cf['Resources']
+            assert 'DeployECSDev' in cf['Resources']
             assert 'SAST' in cf['Resources']
-            assert 'PublishECRdevelop' in cf['Resources']
+            assert 'PublishECRDev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
             assert 'BuildTestUnit' in cf['Resources']
             assert '../01/python37/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
@@ -192,8 +206,8 @@ class TestCodePipeline:
     def test_deve_retornar_codebuild_do_template_app_ecs_com_stage_customizado(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -201,16 +215,15 @@ class TestCodePipeline:
                 params.update(param)
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
             cf_pipeline = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
             cf = self.gerando_cloudformation(cf_pipeline)
             resources = list(cf['Resources'].keys())
             print(cf['Resources'].keys())
             assert len(cf['Resources']) == 10
             assert 'Aqua' in resources
             assert 'Build' in resources
-            assert 'DeployECSdevelop' in resources
+            assert 'DeployECSDev' in resources
             assert 'SAST' in resources
-            assert 'PublishECRdevelop' in resources
+            assert 'PublishECRDev' in resources
             assert 'Sonar' in resources
             assert 'BuildTestUnit' in cf['Resources']
             assert '../01/python37/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
@@ -225,16 +238,13 @@ class TestCodePipeline:
     def test_deve_retornar_source_do_template_app_ecs_sem_source_customizado(self, params):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            template_yml = self.load_yml('tests/payload/payload_1.yml')
-
+            template_pipeline = self.load_template(name_template, 'develop')
+            template_yml = self.load_yml('payload_1.yml')
             stages = template_yml['pipeline']
             reponame = template_yml['Parameter'][0]['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-
             cf_pipeline = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 2
             assert 'SharedLibrary' in cf['Resources']
@@ -248,16 +258,12 @@ class TestCodePipeline:
     def test_deve_retornar_source_do_template_app_ecs_com_source_customizado_sem_branch(self, params):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            template_yml = self.load_yml('tests/payload/payload_3.yml')
-
+            template_yml = self.load_yml('payload_3.yml')
             stages = template_yml['pipeline']
             reponame = template_yml['Parameter'][0]['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-
             cf_pipeline = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 3
             assert 'SharedLibrary' in cf['Resources']
@@ -274,16 +280,13 @@ class TestCodePipeline:
     def test_deve_retornar_source_do_template_app_ecs_com_source_customizado_com_branch(self, params):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            template_yml = self.load_yml('tests/payload/payload_4.yml')
-
+            template_pipeline = self.load_template(name_template, 'develop')
+            template_yml = self.load_yml('payload_4.yml')
             stages = template_yml['pipeline']
             reponame = template_yml['Parameter'][0]['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-
             cf_pipeline = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources']['Tools'])
             assert len(cf['Resources']) == 3
             assert 'SharedLibrary' in cf['Resources']
@@ -300,8 +303,8 @@ class TestCodePipeline:
     def test_deve_retornar_action_do_template_app_ecs_payload_1(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_1.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_1.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -318,8 +321,8 @@ class TestCodePipeline:
     def test_deve_retornar_action_do_template_app_ecs_payload_2(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_2.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_2.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -327,22 +330,17 @@ class TestCodePipeline:
                 params.update(param)
             reponame = params['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
-
             cf_pipeline = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 7
 
     def test_deve_retornar_action_do_template_app_ecs_payload_3(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_3.yml')
+            template_pipeline = self.load_template(name_template,'develop')
+            make = self.load_yml('payload_3.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -350,22 +348,17 @@ class TestCodePipeline:
                 params.update(param)
             reponame = params['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
-
             cf_pipeline = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 7
 
     def test_deve_retornar_action_do_template_app_ecs_payload_4(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_4.yml')
+            template_pipeline = self.load_template(name_template,'develop')
+            make = self.load_yml('payload_4.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -375,20 +368,16 @@ class TestCodePipeline:
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
             resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
-
             cf_pipeline = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 7
 
     def test_deve_retornar_action_do_template_app_ecs_payload_5(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_5.yml')
+            template_pipeline = self.load_template(name_template,'develop')
+            make = self.load_yml('payload_5.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -396,21 +385,17 @@ class TestCodePipeline:
                 params.update(param)
             reponame = params['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
             cf_pipeline = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 8
 
     def test_deve_retornar_action_do_template_app_ecs_payload_6(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template,'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -418,22 +403,17 @@ class TestCodePipeline:
                 params.update(param)
             reponame = params['Projeto']
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
-            resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
-
             cf_pipeline = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 10
 
     def test_deve_retornar_stage_do_template_app_ecs_payload_1(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_1.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_1.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -443,23 +423,20 @@ class TestCodePipeline:
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
             resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
             cf_source = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf_action = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
             resources.update(cf_source)
             resources.update(cf_action)
             cf_pipeline = app.generate_stage(template_pipeline, resources, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 5
 
     def test_deve_retornar_stage_do_template_app_ecs_payload_2(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_2.yml')
+            template_pipeline = self.load_template(name_template,'develop')
+            make = self.load_yml('payload_2.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -481,8 +458,8 @@ class TestCodePipeline:
     def test_deve_retornar_stage_do_template_app_ecs_payload_3(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_3.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_3.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -492,23 +469,20 @@ class TestCodePipeline:
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
             resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
             cf_source = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf_action = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
             resources.update(cf_source)
             resources.update(cf_action)
             cf_pipeline = app.generate_stage(template_pipeline, resources, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 5
 
     def test_deve_retornar_stage_do_template_app_ecs_payload_4(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_4.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_4.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -518,7 +492,6 @@ class TestCodePipeline:
             app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
             resources = {}
             cf_codebuild = app.generate_codebuild(runtime, template_pipeline, stages, params, 'develop', imageCustom)
-
             cf_source = app.generate_sources(stages, 'develop', reponame, 'codebuild_role', 'release-1.19')
             cf_action = app.generate_action(cf_codebuild, template_pipeline, reponame, 'develop')
             resources.update(cf_source)
@@ -533,8 +506,8 @@ class TestCodePipeline:
     def test_deve_retornar_stage_do_template_app_ecs_payload_5(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_5.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_5.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -549,17 +522,15 @@ class TestCodePipeline:
             resources.update(cf_source)
             resources.update(cf_action)
             cf_pipeline = app.generate_stage(template_pipeline, resources, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 5
 
     def test_deve_retornar_stage_do_template_app_ecs_payload_6(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -574,17 +545,15 @@ class TestCodePipeline:
             resources.update(cf_source)
             resources.update(cf_action)
             cf_pipeline = app.generate_stage(template_pipeline, resources, 'develop')
-
             cf = self.gerando_cloudformation(cf_pipeline)
-
             print(cf['Resources'])
             assert len(cf['Resources']) == 7
 
     def test_deve_retornar_pipeline(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -608,8 +577,8 @@ class TestCodePipeline:
     def test_deve_salvar_pipeline_na_pasta_swap(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -635,8 +604,8 @@ class TestCodePipeline:
     def test_deve_criar_pasta_swap(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             runtime = make['runtime']
             params = {}
@@ -659,13 +628,14 @@ class TestCodePipeline:
             assert os.path.isdir('swap') == True
             assert os.path.isfile('swap/Pipeline-Python-develop-00000.json') == True
             os.remove('swap/Pipeline-Python-develop-00000.json')
+            os.rmdir('swap')
 
 
     def test_deve_retornar_url_da_pipeline(self, params, imageCustom):
         for pipe in params['templates']:
             name_template = pipe
-            template_pipeline = self.load_template(name_template)
-            make = self.load_yml('tests/payload/payload_6.yml')
+            template_pipeline = self.load_template(name_template, 'develop')
+            make = self.load_yml('payload_6.yml')
             stages = make['pipeline']
             params = {}
             for param in make['Parameter']:
@@ -683,7 +653,6 @@ class TestCodePipeline:
                 'release': 'release-10',
                 'imageCustom': imageCustom
             }
-
             file_template = app.generate(tp=template_params)
             print(file_template)
             assert os.path.isdir('swap') == True
@@ -700,3 +669,47 @@ class TestCodePipeline:
         assert 0 == cf["Resources"]["SG"]["Properties"]["SecurityGroupIngress"][0]["FromPort"]
         assert "TCP" == cf["Resources"]["SG"]["Properties"]["SecurityGroupIngress"][0]["IpProtocol"]
         assert 65535 == cf["Resources"]["SG"]["Properties"]["SecurityGroupIngress"][0]["ToPort"]
+
+    def test_deve_verificar_a_estrutura_da_pipeline(self, params, imageCustom, payloads):
+        for pipe in params['templates']:
+            for payload in payloads:
+                name_template = pipe
+                template_pipeline = self.load_template(name_template, 'develop')
+                make = self.load_yml(payload)
+                stages = make['pipeline']
+                params = {}
+                for param in make['Parameter']:
+                    params.update(param)
+                app = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
+                template_params = {
+                    'env': 'develop',
+                    'runtime': make['runtime'],
+                    'stages': make['pipeline'],
+                    'account': '000000',
+                    'pipeline_stages': template_pipeline,
+                    'params': params,
+                    'release': 'release-10',
+                    'imageCustom': imageCustom
+                }
+                file_template = app.generate(tp=template_params)
+                ft = open(file_template)
+                ftemplate= json.loads(ft.read())
+                ft.close()
+                resources = ftemplate['Resources'].keys()
+                codebuilds = []
+                sg = []
+                for resource in resources:
+                    if ftemplate['Resources'][resource]['Type'] == 'AWS::CodeBuild::Project':
+                       name = ftemplate['Resources'][resource]['Properties']['Name']
+                       codebuilds.append(name)
+                    elif ftemplate['Resources'][resource]['Type'] == 'AWS::EC2::SecurityGroup':
+                       sg.append(ftemplate['Resources'][resource])
+
+                for resource in resources:
+                    if ftemplate['Resources'][resource]['Type'] == 'AWS::CodePipeline::Pipeline':
+                       for stages in (ftemplate['Resources'][resource]['Properties']['Stages']):
+                           for action in stages['Actions']:
+                              if action['ActionTypeId']['Category'] == 'Build':
+                                 assert action['Configuration']['ProjectName'] in codebuilds
+                assert sg
+                os.remove('swap/Pipeline-Python-develop-000000.json')

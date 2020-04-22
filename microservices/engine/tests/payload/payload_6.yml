@@ -7,7 +7,7 @@ Parameter:
     - Projeto: Pipeline-Python
 pipeline:
     - source
-    - ci
+    - continuousintegration
     - security
     - publish
     - custom::Seguranca:

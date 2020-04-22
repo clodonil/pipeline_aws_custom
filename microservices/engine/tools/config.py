@@ -14,7 +14,7 @@ dynamodb = {
 }
 
 aws_region = 'us-east-1'
-s3_bucket = 'wasabi-templates'
+s3_bucket = 'https://wasabi-templates.s3.amazonaws.com/'
 
 ### CodeBuild
 codebuild_timeoutInMinutes = 10

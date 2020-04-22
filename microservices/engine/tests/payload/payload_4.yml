@@ -10,7 +10,7 @@ pipeline:
     - source::custom:
         - RepositoryName: Tools
         - BranchName: master
-    - ci
+    - continuousintegration
     - security
     - publish
     - deploy

@@ -1,0 +1,698 @@
+{
+    "Parameters": {
+        "DevAccount": {
+            "Default": "/Accounts/Dev",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "DevSecOpsAccount": {
+            "Default": "/Accounts/DevSecOps",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "DevToolsAccount": {
+            "Default": "/Accounts/DevTools",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "HomologAccount": {
+            "Default": "/Accounts/Homolog",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "KMSKeyArn": {
+            "Default": "/Shared/KMSKeyArn",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "PrivateSubnetOne": {
+            "Default": "/Networking/PrivateSubnetOne",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "PrivateSubnetTwo": {
+            "Default": "/Networking/PrivateSubnetTwo",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "ProdAccount": {
+            "Default": "/Accounts/Prod",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "TokenAqua": {
+            "Default": "/Shared/TokenAqua",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        },
+        "VPCID": {
+            "Default": "/Networking/VPCID",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        }
+    },
+    "Resources": {
+        "Aqua": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "imagem_Aqua",
+                    "ImagePullCredentialsType": "SERVICE_ROLE",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-aqua-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/common/aqua/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "Build": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "image_custom_python37",
+                    "ImagePullCredentialsType": "SERVICE_ROLE",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-build-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "../01/python37/build/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "BuildTestUnit": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "imagem_TestUnit",
+                    "ImagePullCredentialsType": "SERVICE_ROLE",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-buildtestunit-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "../01/python37/testunit/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "DeployECSDev": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "aws/codebuild/standard:2.0",
+                    "ImagePullCredentialsType": "CODEBUILD",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-deployecs-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/common/deploy/buildspec_ecs.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "PipelinePythonDevelop": {
+            "Properties": {
+                "ArtifactStore": {
+                    "EncryptionKey": {
+                        "Id": {
+                            "Ref": "KMSKeyArn"
+                        },
+                        "Type": "KMS"
+                    },
+                    "Location": {
+                        "Fn::Sub": "${AWS::AccountId}-artefatos"
+                    },
+                    "Type": "S3"
+                },
+                "Name": "Pipeline-Python-develop",
+                "RoleArn": "arn:aws:iam::033921349789:role/RoleCodepipelineRole",
+                "Stages": [
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "release-1",
+                                    "PollForSourceChanges": "false",
+                                    "RepositoryName": "pipelineaws-sharedlibrary"
+                                },
+                                "Name": "SharedLibrary",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "RoleArn": "arn:aws:iam::000000000:role/DevOpsRole",
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "develop",
+                                    "RepositoryName": "Pipeline-Python"
+                                },
+                                "Name": "Pipeline-Python",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "BranchName": "develop",
+                                    "RepositoryName": "Tools"
+                                },
+                                "Name": "Tools",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Tools"
+                                    }
+                                ],
+                                "RunOrder": "1"
+                            }
+                        ],
+                        "Name": "Source"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-sast-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    },
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "Name": "sast",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "sast"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-sonar-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    },
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "Name": "sonar",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "sonar"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-buildtestunit-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    },
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "Name": "buildtestunit",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "buildtestunit"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-build-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    },
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "Name": "build",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "build"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            }
+                        ],
+                        "Name": "continuousintegration"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-aqua-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    },
+                                    {
+                                        "Name": "SharedLibrary"
+                                    }
+                                ],
+                                "Name": "aqua",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "aqua"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            }
+                        ],
+                        "Name": "security"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-publishecr-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    }
+                                ],
+                                "Name": "publishecrdev",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "publishecrdev"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            }
+                        ],
+                        "Name": "publish"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "Pipeline-Python",
+                                    "ProjectName": "pipeline-python-deployecs-develop"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "Pipeline-Python"
+                                    }
+                                ],
+                                "Name": "deployecsdev",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "deployecsdev"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            }
+                        ],
+                        "Name": "deploy"
+                    }
+                ]
+            },
+            "Type": "AWS::CodePipeline::Pipeline"
+        },
+        "PublishECRDev": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "aws/codebuild/standard:2.0",
+                    "ImagePullCredentialsType": "CODEBUILD",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-publishecr-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "/common/publish/buildspec_ecr.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "SAST": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "VariablePath",
+                            "Value": "/App/Pipeline/Python/"
+                        },
+                        {
+                            "Name": "AccountID",
+                            "Value": "!Sub ${AWS::AccountId}"
+                        },
+                        {
+                            "Name": "s3bucket",
+                            "Value": "!Sub ${AWS::AccountId}-reports"
+                        },
+                        {
+                            "Name": "queue",
+                            "Value": "https://sqs.sa-east-1.amazonaws.com/049557819541/DevSecOps-ToolsReports"
+                        },
+                        {
+                            "Name": "microservicename",
+                            "Value": "Python"
+                        },
+                        {
+                            "Name": "featurename",
+                            "Value": "Pipeline"
+                        }
+                    ],
+                    "Image": "imagem_sast_defaul",
+                    "ImagePullCredentialsType": "SERVICE_ROLE",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-sast-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "../01/python37/sast/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "SG": {
+            "Properties": {
+                "GroupDescription": "This security group is used to control access to the container",
+                "GroupName": "Pipeline-Python-develop",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "TCP",
+                        "ToPort": 65535
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPCID"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "Sonar": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [
+                        {
+                            "Name": "s3bucket",
+                            "Value": "!Sub ${AWS::AccountId}-reports"
+                        },
+                        {
+                            "Name": "microservicename",
+                            "Value": "Python"
+                        },
+                        {
+                            "Name": "featurename",
+                            "Value": "Pipeline"
+                        }
+                    ],
+                    "Image": "imagem_sonar_default",
+                    "ImagePullCredentialsType": "SERVICE_ROLE",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "pipeline-python-sonar-develop",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "../01/python37/sonarqube/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        }
+    }
+}

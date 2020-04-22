@@ -13,6 +13,42 @@ import os
 pid = "/tmp/engine.pid"
 
 
+def setParams(payload, env):
+    template = payload['payload']['template']
+    pipeline_stages = get_dy_template(template, env)
+    release = get_sharedlibrary_release()
+    imageCustom = get_imageCustom()
+    params = {}
+    for param in payload['payload']['Parameter']:
+        params.update(param)
+    template_params = {
+        'env': env,
+        'runtime': payload['payload']['runtime'],
+        'stages': payload['payload']['pipeline'],
+        'account': payload['account'],
+        'pipeline_stages': pipeline_stages,
+        'params': params,
+        'release': release,
+        'imageCustom': imageCustom
+    }
+    return template_params
+
+def save_s3_send_sqs(template_params, requestID, file_template, event):
+    bucket = s3_bucket.split('.')[0].replace('https://','')
+    if upload_file_s3(bucket, file_template):
+       f_tp = file_template.split('/')[-1]
+       f_template = f"{s3_bucket}{f_tp}"
+       msg = {
+           "url": f_template,
+           "account": template_params['account'],
+           "pipelinename": template_params['params']['Projeto'],
+           "requestID": requestID
+       }
+       print("Mensagem Enviada para para Fila de Deploy")
+       #sqs_send(filas['deploy'], msg)
+       print("Deletando a mensagem da fila de processamento")
+       #sqs_delete(event)
+
 def main():
     while True:
      #   try:
@@ -20,46 +56,17 @@ def main():
                 print("Consumindo mensagem")
                 payload = json.loads(event.body)
                 requestID = payload['requestID']
-                account = payload['account']
-                make = payload['payload']
-                template = make['template']
-                params = {}
-                for param in make['Parameter']:
-                    params.update(param)
 
                 # Template Base
                 print("criando o template")
-                codebuild_role = f'arn:aws:iam::{account}:role/{RoleCodeBuild}'
-                codepipeline_roles = f'arn:aws:iam::{account}:role/{RoleCodePipeline}'
-
-                pipeline_stages = get_dy_template(template)
-                release = get_sharedlibrary_release()
-                imageCustom = get_imageCustom()
-
-                template_params = {
-                    'env': 'develop',
-                    'runtime': make['runtime'],
-                    'stages': make['pipeline'],
-                    'account': account,
-                    'pipeline_stages': pipeline_stages,
-                    'params': params,
-                    'release': release,
-                    'imageCustom': imageCustom
-                }
+                codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
+                codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
+                template_params = setParams(payload, 'develop')
                 pipeline = NewTemplate(codepipeline_roles, codebuild_role, DevSecOps_Role)
                 file_template = pipeline.generate(tp=template_params)
+                print("Enviando o template para o Bucket")
+                save_s3_send_sqs(template_params, requestID,file_template, event)
 
-                if upload_file_s3(s3_bucket, file_template):
-                    f_tp = file_template.split('/')[-1]
-                    f_template = f"https://{s3_bucket}.s3.amazonaws.com/{f_tp}"
-                    msg = {
-                        "url": f_template,
-                        "account": account,
-                        "pipelinename": params['Projeto'],
-                        'requestID': requestID
-                    }
-                    sqs_send(filas['deploy'], msg)
-                    sqs_delete(event)
         #         try:
         #             os.remove(file_template)
         #         except IOError as error:

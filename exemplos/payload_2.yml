@@ -8,7 +8,7 @@ Parameter:
     - BuildCustomizado
 pipeline:
     - source
-    - ci
+    - continuousintegration
     - security
     - publish
     - deploy

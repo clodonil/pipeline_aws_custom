@@ -10,7 +10,7 @@ pipeline:
     - source::custom:
         - BranchName: master
         - RepositoryName: Tools            
-    - ci::custom:
+    - continuousintegration::custom:
         - testmultant:
             - source: Build
             - environment:

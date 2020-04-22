@@ -94,8 +94,7 @@ class NewCodeBuild:
         title = 'ControlVersion'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-ControlVersion-{params['branchname']}"
-        controlversion = self.create_codebuild('ControlVersion', name, env, image, f'common/controlversion/buildspec.yml')
-
+        controlversion = self.create_codebuild('ControlVersion', name.lower(), env, image, f'common/controlversion/buildspec.yml')
         return controlversion
 
     def SAST(self, **params):
@@ -128,7 +127,7 @@ class NewCodeBuild:
         title = 'SAST'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-SAST-{params['branchname']}"
-        sast = self.create_codebuild(title, name, env, image, f"../01/{params['runtime']}/sast/buildspec.yml")
+        sast = self.create_codebuild(title, name.lower(), env, image, f"../01/{params['runtime']}/sast/buildspec.yml")
         return sast
 
     def Sonar(self, **params):
@@ -149,7 +148,7 @@ class NewCodeBuild:
         title = 'Sonar'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Sonar-{params['branchname']}"
-        sonar = self.create_codebuild(title, name, env, image, f"../01/{params['runtime']}/sonarqube/buildspec.yml")
+        sonar = self.create_codebuild(title, name.lower(), env, image, f"../01/{params['runtime']}/sonarqube/buildspec.yml")
         return sonar
 
 
@@ -163,7 +162,7 @@ class NewCodeBuild:
         title = 'BuildTestUnit'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-BuildTestUnit-{params['branchname']}"
-        testunit = self.create_codebuild(title, name, env, image, buildspec)
+        testunit = self.create_codebuild(title, name.lower(), env, image, buildspec)
         return testunit
 
     def Build(self, **params):
@@ -176,7 +175,7 @@ class NewCodeBuild:
         title = 'Build'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Build-{params['branchname']}"
-        build = self.create_codebuild(title, name, env, image, buildspec)
+        build = self.create_codebuild(title, name.lower(), env, image, buildspec)
         return build
 
 
@@ -185,19 +184,21 @@ class NewCodeBuild:
         title = 'Aqua'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Aqua-{params['branchname']}"
-        aqua = self.create_codebuild(title, name, env, image, '/common/aqua/buildspec.yml')
+        aqua = self.create_codebuild(title, name.lower(), env, image, '/common/aqua/buildspec.yml')
         return aqua
 
-    def PublishECR(self, **params):
+    def PublishECRDev(self, **params):
         env = []
+        title = 'PublishECRDev'
         image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(f"PublishECR{params['branchname']}", name, env, image, '/common/publish/buildspec_ecr.yml')
+        ecr = self.create_codebuild(title, name.lower(), env, image, '/common/publish/buildspec_ecr.yml')
         return ecr
 
-    def DeployECS(self, **params):
+    def DeployECSDev(self, **params):
         env = []
+        title = 'DeployECSDev'
         image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(f"DeployECS{params['branchname']}", name, env, image, '/common/deploy/buildspec_ecs.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/deploy/buildspec_ecs.yml')
         return deploy_ecs

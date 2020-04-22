@@ -1,6 +1,7 @@
 """
 Tools para validar o arquivo template recebido do SQS
 """
+import yaml
 
 class Validate:
     def __init__(self):
@@ -55,4 +56,4 @@ def change_yml_to_json(content):
         template_json = yaml.safe_load(content)
         return template_json
     except yaml.YAMLError as error:
-      return  {"message": str(error)}
+        return  {"message": str(error)}

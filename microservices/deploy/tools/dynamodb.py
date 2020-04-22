@@ -9,7 +9,7 @@ import json
 import copy
 import time
 import os
-from tools.config import dynamodb, aws_region
+
 
 class DyConnect:
     def __init__(self, table, region):
@@ -36,15 +36,15 @@ class DyConnect:
         return conn.get_item(Key=query)
 
 
-def get_dy_template(template_name,env):
+def get_dy_template(template_name):
     newtemplate = DyConnect(dynamodb['template'], aws_region)
     query = {'name': template_name}
     stages = newtemplate.dynamodb_query(query)
 
     if 'Item' in stages:
         if 'details' in stages['Item']:
-            if env in stages['Item']['details']:
-               return stages['Item']['details'][env]
+            return stages['Item']['details']
+
     return False
 
 def get_sharedlibrary_release():
@@ -55,13 +55,3 @@ def get_sharedlibrary_release():
     if 'Item' in version:
         return version['Item']['release']
     return False
-
-def get_imageCustom():
-    newtemplate = DyConnect(dynamodb['template'], aws_region)
-    query = {'name': 'imagecustom'}
-    version = newtemplate.dynamodb_query(query)
-
-    if 'Item' in version:
-        return version['Item']['details']
-    return False
-

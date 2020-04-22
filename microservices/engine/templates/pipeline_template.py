@@ -239,6 +239,7 @@ class NewTemplate:
 
 
     def generate_action(self, list_codebuild, pipeline_template, reponame, env):
+        featurename,microservicename = reponame.split('-')
         pipeline = NewPipeline()
         action = {}
         projeto = reponame.replace('-','').lower()
@@ -252,7 +253,6 @@ class NewTemplate:
                     if code_template.lower()  == title or code_template_env.lower()  == title:
                        configuration = list(t.values())[0]
 
-
             configuration['PrimarySource'] = reponame
             if isinstance(configuration['InputArtifacts'], list):
                 configuration['InputArtifacts'][0] = reponame
@@ -260,7 +260,7 @@ class NewTemplate:
                 if configuration['InputArtifacts'] == "REPOAPP":
                     configuration['InputArtifacts'] = reponame
             runorder = configuration.pop('runorder')
-            configuration['ProjectName'] = title
+            configuration['ProjectName'] = code.Name
             action[title] = pipeline.create_action(title, int(runorder), configuration, 'Build')
         return action
 
@@ -282,8 +282,8 @@ class NewTemplate:
                         name_stg = name_stg.lower()
                         if name_stg in list_action:
                            l_stage.append(list_action[name_stg])
-                        elif f'{name_stg}{env}'in list_action:
-                           l_stage.append(list_action[f'{name_stg}{env}'])
+                        # elif f'{name_stg}{env}'in list_action:
+                        #    l_stage.append(list_action[f'{name_stg}{env}'])
                 stages.append(pipeline.create_stage(control_stage, l_stage))
 
         return stages

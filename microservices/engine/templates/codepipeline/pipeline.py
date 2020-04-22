@@ -1,8 +1,8 @@
-from troposphere import Ref
+from troposphere import Ref, Sub
 from troposphere.s3 import Bucket
 from troposphere.codepipeline import (
     Pipeline, Stages, Actions, ActionTypeId, OutputArtifacts, InputArtifacts,
-    ArtifactStore)
+    ArtifactStore, EncryptionKey)
 
 
 class NewPipeline:
@@ -84,14 +84,17 @@ class NewPipeline:
         bucket_name = f"{name}-reports"
         project_name = ''.join(e for e in bucket_name if e.isalnum())
 
-        s3bucket = Bucket(project_name, BucketName=bucket_name.lower())
-
         title = name.replace('-', ' ').title().replace(' ', '')
+        encrypt = EncryptionKey(Id= Ref('KMSKeyArn'), Type= 'KMS')
         pipeline = Pipeline(
             title=title,
             Name=name,
             RoleArn=role,
             Stages=list_stages,
-            ArtifactStore=ArtifactStore(Type="S3", Location=Ref(s3bucket))
+            ArtifactStore=ArtifactStore(
+                Type="S3",
+                Location= Sub('${AWS::AccountId}-artefatos'),
+                EncryptionKey= encrypt
+            )
         )
-        return [s3bucket, pipeline]
+        return [pipeline]

@@ -8,7 +8,7 @@ Parameter:
     - BuildCustom: True
 pipeline:
     - source
-    - ci
+    - continuousintegration
     - security
     - publish
     - deploy

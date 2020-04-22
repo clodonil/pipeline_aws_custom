@@ -8,7 +8,7 @@ Parameter:
 pipeline:
     - source:
        - RepositoryName: App
-    - ci
+    - continuousintegration
     - security
     - publish
     - deploy

@@ -1,20 +1,66 @@
-{"name": "app-ecs",
-"details": {
-                "1-source": [],
-                "2-ci": [
-                    {"SAST": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
-                    {"Sonar": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
-                    {"BuildTestUnit": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}},
-                    {"Build": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}}
-                ],
-                "3-security": [
-                    {"Aqua": {"InputArtifacts": ["REPOAPP","SharedLibrary"],"PrimarySource": "REPOAPP","ProjectName": "proj","runorder": "1"}}
-                ],
-                "4-publish": [
-                    {"PublishECR": {"ProjectName": "proj", "PrimarySource": "REPOAPP", "InputArtifacts": "REPOAPP", "runorder": "1"}}
-                ],
-                "5-deploy": [
-                    {"DeployECS": {"ProjectName": "proj", "PrimarySource": "REPOAPP", "InputArtifacts": "REPOAPP", "runorder": "1"}}
-                ]
-            }
-            }
+{
+	"name": "app-ecs",
+	"details": {
+		"develop": {
+			"1-source": [],
+			"2-continuousintegration": [{
+					"SAST": {
+						"InputArtifacts": ["REPOAPP", "SharedLibrary"],
+						"PrimarySource": "REPOAPP",
+						"ProjectName": "proj",
+						"runorder": "1"
+					}
+				},
+				{
+					"Sonar": {
+						"InputArtifacts": ["REPOAPP", "SharedLibrary"],
+						"PrimarySource": "REPOAPP",
+						"ProjectName": "proj",
+						"runorder": "1"
+					}
+				},
+				{
+					"BuildTestUnit": {
+						"InputArtifacts": ["REPOAPP", "SharedLibrary"],
+						"PrimarySource": "REPOAPP",
+						"ProjectName": "proj",
+						"runorder": "1"
+					}
+				},
+				{
+					"Build": {
+						"InputArtifacts": ["REPOAPP", "SharedLibrary"],
+						"PrimarySource": "REPOAPP",
+						"ProjectName": "proj",
+						"runorder": "1"
+					}
+				}
+			],
+			"3-security": [{
+				"Aqua": {
+					"InputArtifacts": ["REPOAPP", "SharedLibrary"],
+					"PrimarySource": "REPOAPP",
+					"ProjectName": "proj",
+					"runorder": "1"
+				}
+			}],
+			"4-publish": [{
+				"PublishECRDev": {
+					"ProjectName": "proj",
+					"PrimarySource": "REPOAPP",
+					"InputArtifacts": "REPOAPP",
+					"runorder": "1"
+				}
+			}],
+			"5-deploy": [{
+				"DeployECSDev": {
+					"ProjectName": "proj",
+					"PrimarySource": "REPOAPP",
+					"InputArtifacts": "REPOAPP",
+					"runorder": "1"
+				}
+			}]
+		},
+		"master": {}
+	}
+}

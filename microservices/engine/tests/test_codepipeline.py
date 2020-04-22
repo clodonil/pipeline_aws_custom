@@ -143,7 +143,6 @@ class TestCodePipeline:
         cf_stage  = pipeline.create_stage(name, [cf_action])
         cf = self.gerando_cloudformation(cf_stage)
         print(cf)
-
         assert 'StageCompilacao' in cf['Resources']
         assert 'Stage-Compilacao' == cf['Resources']['StageCompilacao']['Name']
 
@@ -151,32 +150,10 @@ class TestCodePipeline:
         action = params['action']
         stage  = params['stage']
         pipeline = params['pipeline']
-
-
         obj_pipeline  = NewPipeline()
         cf_action = obj_pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
         cf_stage  = obj_pipeline.create_stage(stage['name'], [cf_action])
         cf_pipeline = obj_pipeline.create_pipeline(pipeline['name'], pipeline['role'], [cf_stage])
-
         cf = self.gerando_cloudformation(cf_pipeline)
         print(cf)
-
-        assert 'PipelineEcsreports' in cf['Resources']
         assert 'Pipelineecs' in cf['Resources']
-        assert 'pipelineecs' in cf['Resources']['PipelineEcsreports']['Properties']['BucketName']
-
-    def test_deve_retornar_um_Bucket_S3_para_pipeline(self, params):
-        action = params['action']
-        stage  = params['stage']
-        pipeline = params['pipeline']
-
-
-        obj_pipeline  = NewPipeline()
-        cf_action = obj_pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
-        cf_stage  = obj_pipeline.create_stage(stage['name'], [cf_action])
-        cf_pipeline = obj_pipeline.create_pipeline(pipeline['name'], pipeline['role'], [cf_stage])
-
-        cf = self.gerando_cloudformation(cf_pipeline)
-        print(cf)
-
-        assert 'pipelineecs' in cf['Resources']['PipelineEcsreports']['Properties']['BucketName']

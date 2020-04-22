@@ -9,7 +9,7 @@ pipeline:
     - source
     - source::custom:
         - RepositoryName: Tools
-    - ci
+    - continuousintegration
     - security
     - publish
     - deploy
