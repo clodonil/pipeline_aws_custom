@@ -1,17 +1,16 @@
 ---
 version: 1
 template: app-ecs
-runtime: python37
+runtime: python:3.7
 provider: aws
 Parameter:
     - Projeto: Pipeline-Python
     - BuildCustom: True
 pipeline:
-    - source
-    - continuousintegration
-    - security
-    - publish
-    - deploy
+    develop:
+        - Source
+        - Continuous_Integration
+        - DeployDev
 callback:
     protocolo: email
     endpoint: clodonil@nisled.org

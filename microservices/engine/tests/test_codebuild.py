@@ -25,10 +25,10 @@ class TestCodeBuild:
                 "all": "image_Build",
                 "python37": "image_custom"
             },
-            "BuildTestUnit": {
+            "TestUnit": {
                 "all": "imagem_TestUnit"
             },
-            "SAST": {
+            "Fortify": {
                 "all": "imagem_sast"
             },
             "Sonar": {
@@ -146,35 +146,35 @@ class TestCodeBuild:
     def test_deve_retornar_codebuild_do_Sast(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
-            sast = newcodebuild.SAST(featurename='pipeline', microservicename='teste', runtime=runtime, branchname='develop', custom=False,imageCustom=imageCustom)
+            sast = newcodebuild.Fortify(featurename='pipeline', microservicename='teste', runtime=runtime, branchname='develop', custom=False,imageCustom=imageCustom)
             cf = self.gerando_cloudformation(sast)
             print(cf)
-            assert 'pipeline-teste-sast-develop' in cf['Resources']['SAST']['Properties']['Name']
-            assert f'../01/{runtime}/sast/buildspec.yml' in cf['Resources']['SAST']['Properties']['Source']['BuildSpec']
-            assert 'imagem_sast' in cf['Resources']['SAST']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-fortify-develop' in cf['Resources']['Fortify']['Properties']['Name']
+            assert f'../01/{runtime}/sast/buildspec.yml' in cf['Resources']['Fortify']['Properties']['Source']['BuildSpec']
+            assert 'imagem_sast' in cf['Resources']['Fortify']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_TestUnit_sem_builcustomizado(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
 
-            codebuild = newcodebuild.BuildTestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
+            codebuild = newcodebuild.TestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
-            assert 'pipeline-teste-buildtestunit-develop' in cf['Resources']['BuildTestUnit']['Properties']['Name']
-            assert f"../01/{runtime}/testunit/buildspec.yml" in cf['Resources']['BuildTestUnit']['Properties']['Source']['BuildSpec']
-            assert 'imagem_TestUnit' in cf['Resources']['BuildTestUnit']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-testunit-develop' in cf['Resources']['TestUnit']['Properties']['Name']
+            assert f"../01/{runtime}/testunit/buildspec.yml" in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert 'imagem_TestUnit' in cf['Resources']['TestUnit']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_TestUnit_com_builcustomizado(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
-            codebuild = newcodebuild.BuildTestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,
+            codebuild = newcodebuild.TestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,
                                                    branchname='develop', custom=True, imageCustom=imageCustom)
 
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
-            assert 'pipeline-teste-buildtestunit-develop' in cf['Resources']['BuildTestUnit']['Properties']['Name']
-            assert "pipeline/buildspec_testunit.yml" in cf['Resources']['BuildTestUnit']['Properties']['Source']['BuildSpec']
-            assert 'imagem_TestUnit' in cf['Resources']['BuildTestUnit']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-testunit-develop' in cf['Resources']['TestUnit']['Properties']['Name']
+            assert "pipeline/buildspec_testunit.yml" in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert 'imagem_TestUnit' in cf['Resources']['TestUnit']['Properties']['Environment']['Image']
 
 
     def test_deve_retornar_codebuild_do_Sonar(self, params, imageCustom):

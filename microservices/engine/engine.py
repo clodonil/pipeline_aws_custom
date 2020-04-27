@@ -15,7 +15,7 @@ pid = "/tmp/engine.pid"
 
 def setParams(payload, env):
     template = payload['payload']['template']
-    pipeline_stages = get_dy_template(template, env)
+    pipeline_stages = get_dy_template(template)
     release = get_sharedlibrary_release()
     imageCustom = get_imageCustom()
     params = {}
@@ -26,7 +26,7 @@ def setParams(payload, env):
         'runtime': payload['payload']['runtime'],
         'stages': payload['payload']['pipeline'],
         'account': payload['account'],
-        'pipeline_stages': pipeline_stages,
+        'pipeline_stages': pipeline_stages[env],
         'params': params,
         'release': release,
         'imageCustom': imageCustom

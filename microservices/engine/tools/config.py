@@ -24,7 +24,7 @@ RoleCodeBuild = "RoleCodeBuildRole"
 ### Codepipeline
 RoleCodePipeline = "RoleCodepipelineRole"
 
-DevSecOps_Role = "arn:aws:iam::000000000:role/DevOpsRole"
+DevSecOps_Role = "arn:aws:iam::033921349789:role/DevOpsRole"
 
 ### SSM
 

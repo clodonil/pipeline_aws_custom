@@ -6,11 +6,9 @@ provider: aws
 Parameter:
     - Projeto: Pipeline-Python
 pipeline:
-    - source
-    - continuousintegration
-    - security
-    - publish
-    - deploy
+    - Source
+    - Continuou_Integration
+    - Deploy
 callback:
     protocolo: email
     endpoint: clodonil@nisled.org

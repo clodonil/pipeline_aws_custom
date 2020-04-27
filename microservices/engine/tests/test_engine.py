@@ -1,10 +1,32 @@
-# #from engine import setParams
-# import pytest
-# from moto import mock_s3
-#
-# class TestEngine:
-#     @pytest.fixture
-#     def params(self):
+from engine import setParams
+import pytest
+from moto import mock_dynamodb
+
+class TestEngine:
+    @pytest.fixture
+    @mock_dynamodb
+    def create_dynamodb(self):
+        dynamodb = boto3.resource('dynamodb')
+
+        # Create the table
+        response = dynamodb.create_table(
+            TableName='cloudwatch-metrics-accounts-global',
+            KeySchema=[
+                {'AttributeName': 'account_id', 'KeyType': 'HASH'},  # Partition key
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'account_id', 'AttributeType': 'S'},
+            ],
+            ProvisionedThroughput={
+                'ReadCapacityUnits': 10,
+                'WriteCapacityUnits': 10
+            }
+        )
+        print(response)
+
+
+    def test_check(self):
+        assert 1 == 2
 #         templates = ['app-ecs']
 #         return templates
 #

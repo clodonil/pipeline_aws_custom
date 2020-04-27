@@ -36,15 +36,14 @@ class DyConnect:
         return conn.get_item(Key=query)
 
 
-def get_dy_template(template_name,env):
+def get_dy_template(template_name):
     newtemplate = DyConnect(dynamodb['template'], aws_region)
     query = {'name': template_name}
     stages = newtemplate.dynamodb_query(query)
 
     if 'Item' in stages:
         if 'details' in stages['Item']:
-            if env in stages['Item']['details']:
-               return stages['Item']['details'][env]
+            return stages['Item']['details']
     return False
 
 def get_sharedlibrary_release():
