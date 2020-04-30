@@ -8,9 +8,12 @@ from daemonize import Daemonize
 import json
 import time
 import os
+import logging
+
 
 
 pid = "/tmp/engine.pid"
+logging.basicConfig(filename='wasabi.log',format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',level=logging.DEBUG)
 
 
 def setParams(payload, env):
@@ -24,12 +27,13 @@ def setParams(payload, env):
     template_params = {
         'env': env,
         'runtime': payload['payload']['runtime'],
-        'stages': payload['payload']['pipeline'],
+        'stages': payload['payload']['pipeline'][env],
         'account': payload['account'],
-        'pipeline_stages': pipeline_stages[env],
+        'pipeline_stages': pipeline_stages,
         'params': params,
         'release': release,
-        'imageCustom': imageCustom
+        'imageCustom': imageCustom,
+        'type': template
     }
     return template_params
 
@@ -53,9 +57,9 @@ def main():
     while True:
      #   try:
             for event in sqs_receive(filas['processing']):
-                print("Consumindo mensagem")
                 payload = json.loads(event.body)
                 requestID = payload['requestID']
+                logging.debug(f"RequestId: {requestID} - Account: {payload['account']}")
 
                 # Template Base
                 print("criando o template")

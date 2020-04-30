@@ -259,7 +259,6 @@ class NewTemplate:
     def generate_stage(self, pipeline_stages, list_action, env):
         pipeline = NewPipeline()
         stages = []
-        print(pipeline_stages)
         for t_stage in sorted(pipeline_stages):
             control_stage = t_stage.split('-')[1]
             if self.check_stage_not_env(control_stage, env):

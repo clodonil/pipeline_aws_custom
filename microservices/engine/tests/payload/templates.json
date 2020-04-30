@@ -86,7 +86,7 @@
 				}
 			}
 			],
-			"3-DeployHomol": [
+			"4-DeployHomol": [
 				{
 				"PublishECRHomol": {
 					"ProjectName": "proj",
