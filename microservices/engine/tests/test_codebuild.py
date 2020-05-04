@@ -15,6 +15,7 @@ class TestCodeBuild:
             'runtime': ['python36']
          }
         return msg
+
     @pytest.fixture
     def imageCustom(self):
         imgcustom = {
@@ -63,6 +64,24 @@ class TestCodeBuild:
         assert 'aws/codebuild/standard:2.0' == code_com_espaco['Resources']['Testecodebuild']['Properties']['Environment']['Image']
         assert 'aws/codebuild/standard:2.0' == code_com_false['Resources']['Testecodebuild']['Properties']['Environment']['Image']
 
+    def test_deve_retornar_um_codebuild_customizado_com_cache_definido(self, params):
+        codebuild  = NewCodeBuild(params['role'])
+        codebuild_com_buildspec = codebuild.create_codebuild('Testecodebuild',params['nome'], params['env'], cache=True)
+
+        code_buildspec  = self.gerando_cloudformation(codebuild_com_buildspec)
+        print(code_buildspec)
+        assert 'Cache' in code_buildspec['Resources']['Testecodebuild']['Properties']
+        assert 'S3' in code_buildspec['Resources']['Testecodebuild']['Properties']['Cache']['Type']
+        assert '!Sub ${AWS::AccountId}-cache' in code_buildspec['Resources']['Testecodebuild']['Properties']['Cache']['Location']
+
+    def test_deve_retornar_um_codebuild_customizado_sem_cache_definido(self, params):
+        codebuild  = NewCodeBuild(params['role'])
+        codebuild_com_buildspec = codebuild.create_codebuild('Testecodebuild',params['nome'], params['env'], cache=False)
+
+        code_buildspec  = self.gerando_cloudformation(codebuild_com_buildspec)
+        print(code_buildspec)
+        assert 'Cache' not in code_buildspec['Resources']['Testecodebuild']['Properties']
+
     def test_deve_retornar_um_codebuild_customizado_com_buildspec_definido(self, params):
         codebuild  = NewCodeBuild(params['role'])
         codebuild_com_buildspec = codebuild.create_codebuild('Testecodebuild',params['nome'], params['env'], imagecustom=False, buildspec='test_buildspec.yml')
@@ -78,8 +97,8 @@ class TestCodeBuild:
 
         buildspec_espaco = self.gerando_cloudformation(codebuild_com_buildspec_espaco)
         buildspec_false = self.gerando_cloudformation(codebuild_com_buildspec_false)
-        assert "pipeline/testecodebuild_buildspec.yml" in buildspec_espaco['Resources']['Testecodebuild']['Properties']['Source']['BuildSpec']
-        assert "pipeline/testecodebuild_buildspec.yml" in buildspec_false['Resources']['Testecodebuild']['Properties']['Source']['BuildSpec']
+        assert "pipeline/buildspec_testecodebuild.yml" in buildspec_espaco['Resources']['Testecodebuild']['Properties']['Source']['BuildSpec']
+        assert "pipeline/buildspec_testecodebuild.yml" in buildspec_false['Resources']['Testecodebuild']['Properties']['Source']['BuildSpec']
 
     def test_deve_retornar_um_codebuild_customizado_com_env_definido(self, params):
         libcodebuild  = NewCodeBuild(params['role'])
@@ -176,7 +195,6 @@ class TestCodeBuild:
             assert "pipeline/buildspec_testunit.yml" in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
             assert 'imagem_TestUnit' in cf['Resources']['TestUnit']['Properties']['Environment']['Image']
 
-
     def test_deve_retornar_codebuild_do_Sonar(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
@@ -187,7 +205,6 @@ class TestCodeBuild:
             assert 'pipeline-teste-sonar-develop' in cf['Resources']['Sonar']['Properties']['Name']
             assert f'../01/{runtime}/sonarqube/buildspec.yml' in cf['Resources']['Sonar']['Properties']['Source']['BuildSpec']
             assert 'imagem_sonar' in cf['Resources']['Sonar']['Properties']['Environment']['Image']
-
 
     def test_deve_retornar_codebuild_do_Build_sem_builcustomizado(self, params, imageCustom):
         for runtime in params['runtime']:
@@ -213,7 +230,6 @@ class TestCodeBuild:
             assert 'pipeline/buildspec_build.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
             assert 'image_Build' in cf['Resources']['Build']['Properties']['Environment']['Image']
 
-
     def test_deve_retornar_codebuild_do_Aqua(self, params, imageCustom):
         newcodebuild =  NewCodeBuild(params['role'])
         codebuild = newcodebuild.Aqua(runtime='python',featurename='pipeline', microservicename='teste', branchname='develop', custom=True, imageCustom=imageCustom)
@@ -221,7 +237,7 @@ class TestCodeBuild:
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
         assert 'pipeline-teste-aqua-develop' in cf['Resources']['Aqua']['Properties']['Name']
-        assert '/common/aqua/buildspec.yml' in cf['Resources']['Aqua']['Properties']['Source']['BuildSpec']
+        assert '/common/container-security/buildspec.yml' in cf['Resources']['Aqua']['Properties']['Source']['BuildSpec']
         assert 'imagem_Aqua' in cf['Resources']['Aqua']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_deploy_ecs(self, params, imageCustom):
@@ -240,5 +256,5 @@ class TestCodeBuild:
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
         assert 'pipeline-teste-publishecr-develop' in cf['Resources']['PublishECRDev']['Properties']['Name']
-        assert '/common/publish/buildspec_ecr.yml' in cf['Resources']['PublishECRDev']['Properties']['Source']['BuildSpec']
+        assert '/common/Publish/buildspec-to-dev.yml' in cf['Resources']['PublishECRDev']['Properties']['Source']['BuildSpec']
         assert 'aws/codebuild/standard:2.0' in cf['Resources']['PublishECRDev']['Properties']['Environment']['Image']

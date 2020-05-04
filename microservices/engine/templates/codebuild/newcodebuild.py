@@ -1,6 +1,9 @@
+from sqlite3 import Cache
+
 from troposphere.codebuild import (
-    Artifacts, Environment, Source, Project, VpcConfig)
+    Artifacts, Environment, Source, Project, VpcConfig, ProjectCache)
 from troposphere import Ref
+from tools.config import version
 
 
 class NewCodeBuild:
@@ -22,7 +25,7 @@ class NewCodeBuild:
         )
         self.timeoutInMinutes = 10
 
-    def create_codebuild(self, title, name, envs, imagecustom=False, buildspec=False,):
+    def create_codebuild(self, title, name, envs, imagecustom=False, buildspec=False,cache=True):
         project_name = title
         # imagem do codebuild
         if imagecustom:
@@ -36,7 +39,7 @@ class NewCodeBuild:
         if buildspec:
             pathBuildSpec = f'{buildspec}'
         else:
-            pathBuildSpec = f'pipeline/{name.lower()}_buildspec.yml'
+            pathBuildSpec = f'pipeline/buildspec_{name.lower()}.yml'
 
         if isinstance(envs, list):
             if all(isinstance(env, dict) for env in envs):
@@ -64,17 +67,36 @@ class NewCodeBuild:
             Type='CODEPIPELINE'
         )
 
-        codebuild = Project(
-            project_name,
-            Artifacts=self.artifacts,
-            Environment=environment,
-            Name=name,
-            ServiceRole=self.roleCodeBuild,
-            Source=source,
-            EncryptionKey=self.kMSKeyArn,
-            TimeoutInMinutes=self.timeoutInMinutes,
-            VpcConfig=self.vpcConfig
-        )
+        if cache:
+            use_cache = ProjectCache(
+                Location = '!Sub ${AWS::AccountId}-cache',
+                Type = 'S3',
+                Modes = ['LOCAL_CUSTOM_CACHE']
+            )
+            codebuild = Project(
+                project_name,
+                Artifacts=self.artifacts,
+                Environment=environment,
+                Name=name,
+                ServiceRole=self.roleCodeBuild,
+                Source=source,
+                EncryptionKey=self.kMSKeyArn,
+                TimeoutInMinutes=self.timeoutInMinutes,
+                Cache=use_cache,
+                VpcConfig=self.vpcConfig
+            )
+        else:
+            codebuild = Project(
+                project_name,
+                Artifacts=self.artifacts,
+                Environment=environment,
+                Name=name,
+                ServiceRole=self.roleCodeBuild,
+                Source=source,
+                EncryptionKey=self.kMSKeyArn,
+                TimeoutInMinutes=self.timeoutInMinutes,
+                VpcConfig=self.vpcConfig
+            )
         return codebuild
 
     def ImageCustom(self, title, imagecustom, runtime):
@@ -85,10 +107,24 @@ class NewCodeBuild:
         return image
 
     def ControlVersion(self, **params):
+        # TODO: PIPELINETYPE requerer uma variável App
+
         env = [
             {
-                "Name" : 'Runtime',
+                "Name": 'QUEUE',
+                "Value": 'https://sqs.sa-east-1.amazonaws.com/049557819541/codemetrics'
+            },
+            {
+                "Name" : 'RUNTIME',
                 "Value" : params['runtime']
+            },
+            {
+                "Name": 'PIPELINETYPE',
+                "Value": params['runtime']
+            },
+            {
+                "Name": 'VERSION',
+                "Value": f'Wasabi-{version}'
             }
         ]
         title = 'ControlVersion'
@@ -100,12 +136,17 @@ class NewCodeBuild:
     def Fortify(self, **params):
         env =[
             {
-            'Name': 'VariablePath',
-            'Value': f"/App/{params['featurename']}/{params['microservicename']}/"
+                'Name' : 'BranchName',
+                'Value': params['branchname']
+
             },
             {
-              'Name': 'AccountID',
-              'Value': '!Sub ${AWS::AccountId}'
+                'Name': 'VariablePath',
+                'Value': f"/App/{params['featurename']}/{params['microservicename']}/"
+            },
+            {
+                'Name': 'AccountID',
+                'Value': '!Sub ${AWS::AccountId}'
             },
             {
                 'Name': 's3bucket',
@@ -135,6 +176,10 @@ class NewCodeBuild:
     def Sonar(self, **params):
         env = [
             {
+                'Name': 'BranchName',
+                'Value': params['branchname']
+            },
+            {
                 'Name': 's3bucket',
                 'Value': '!Sub ${AWS::AccountId}-reports'
             },
@@ -155,9 +200,13 @@ class NewCodeBuild:
         sonar = self.create_codebuild(title, name.lower(), env, image, buildspec)
         return sonar
 
-
     def TestUnit(self, **params):
-        env = []
+        env = [
+            {
+                'Name': 'DevSecOpsAccount',
+                'Value': '!Ref DevSecOpsAccount'
+            }
+        ]
         if params['custom']:
             buildspec = "pipeline/buildspec_testunit.yml"
         else:
@@ -171,7 +220,12 @@ class NewCodeBuild:
         return testunit
 
     def Build(self, **params):
-        env = []
+        env = [
+            {
+                'Name': 'DevSecOpsAccount',
+                'Value': '!Ref DevSecOpsAccount'
+            }
+        ]
         if params['custom']:
             buildspec = "pipeline/buildspec_build.yml"
         else:
@@ -184,21 +238,69 @@ class NewCodeBuild:
         build = self.create_codebuild(title, name.lower(), env, image, buildspec)
         return build
 
-
     def Aqua(self, **params):
-        env = []
+        env =[
+            {
+                'Name' : 'BranchName',
+                'Value': params['branchname']
+
+            },
+            {
+                'Name': 'VariablePath',
+                'Value': f"/App/{params['featurename']}/{params['microservicename']}/"
+            },
+            {
+                'Name': 'AccountID',
+                'Value': '!Sub ${AWS::AccountId}'
+            },
+            {
+                'Name': 's3bucket',
+                'Value': '!Sub ${AWS::AccountId}-reports'
+            },
+            {
+                'Name': 'queue',
+                'Value': 'https://sqs.sa-east-1.amazonaws.com/049557819541/DevSecOps-ToolsReports'
+            },
+            {
+                'Name': 'microservicename',
+                'Value': params['microservicename']
+            },
+            {
+                'Name': 'featurename',
+                'Value': params['featurename']
+            }
+        ]
         title = 'Aqua'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Aqua-{params['branchname']}"
-        aqua = self.create_codebuild(title, name.lower(), env, image, '/common/aqua/buildspec.yml')
+        aqua = self.create_codebuild(title, name.lower(), env, image, '/common/container-security/buildspec.yml')
         return aqua
 
     def PublishECRDev(self, **params):
-        env = []
+        env =[
+            {
+                'Name' : 'pipeline_environment',
+                'Value': params['branchname']
+
+            },
+            {
+                'Name': 'ecr_account',
+                'Value': '!Ref DevToolsAccount'
+            },
+            {
+                'Name': 'microservice_name',
+                'Value': params['microservicename']
+            },
+            {
+                'Name': 'feature_name',
+                'Value': params['featurename']
+            }
+        ]
+
         title = 'PublishECRDev'
         image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(title, name.lower(), env, image, '/common/publish/buildspec_ecr.yml')
+        ecr = self.create_codebuild(title, name.lower(), env, image, '/common/Publish/buildspec-to-dev.yml')
         return ecr
 
     def DeployECSDev(self, **params):
@@ -226,17 +328,35 @@ class NewCodeBuild:
         return deploy_ecs
 
     def ParametersApp(self, **params):
-        env = []
+        env =[
+            {
+                'Name': 'microservicename',
+                'Value': params['microservicename']
+            },
+            {
+                'Name': 'featurename',
+                'Value': params['featurename']
+            }
+        ]
+
         title = 'ParametersApp'
         image = self.ImageCustom('ParametersApp', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-ParametersApp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/deploy/buildspec_ecs.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/EnvParameters/buildspec.yml')
         return deploy_ecs
 
     def AuditApp(self, **params):
-        env = []
+        # Todo: PIPELINETYPE requerer uma variável com o nome APP
+        env =[
+            {
+                'Name' : 'PIPELINETYPE',
+                'Value': params['branchname']
+
+            }
+        ]
+
         title = 'AuditApp'
         image = self.ImageCustom('AuditApp', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-AuditApp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/deploy/buildspec_ecs.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/audit/buildspec.yml')
         return deploy_ecs

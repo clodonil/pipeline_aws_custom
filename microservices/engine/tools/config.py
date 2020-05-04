@@ -1,5 +1,8 @@
 import os
 
+#Wasabi Version
+version = 'beta01'
+
 # Filas SQS
 filas = {
     "payload": "wasabi-payload",
