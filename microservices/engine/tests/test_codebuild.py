@@ -237,7 +237,7 @@ class TestCodeBuild:
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
         assert 'pipeline-teste-aqua-develop' in cf['Resources']['Aqua']['Properties']['Name']
-        assert '/common/container-security/buildspec.yml' in cf['Resources']['Aqua']['Properties']['Source']['BuildSpec']
+        assert 'common/container-security/buildspec.yml' in cf['Resources']['Aqua']['Properties']['Source']['BuildSpec']
         assert 'imagem_Aqua' in cf['Resources']['Aqua']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_deploy_ecs(self, params, imageCustom):
@@ -246,7 +246,7 @@ class TestCodeBuild:
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
         assert 'pipeline-teste-deployecs-develop' in cf['Resources']['DeployECSDev']['Properties']['Name']
-        assert '/common/deploy/buildspec_ecs.yml' in cf['Resources']['DeployECSDev']['Properties']['Source']['BuildSpec']
+        assert 'common/deploy/buildspec_ecs.yml' in cf['Resources']['DeployECSDev']['Properties']['Source']['BuildSpec']
         assert 'aws/codebuild/standard:2.0' in cf['Resources']['DeployECSDev']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_Publish_ECR(self, params, imageCustom):
@@ -256,5 +256,5 @@ class TestCodeBuild:
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
         assert 'pipeline-teste-publishecr-develop' in cf['Resources']['PublishECRDev']['Properties']['Name']
-        assert '/common/Publish/buildspec-to-dev.yml' in cf['Resources']['PublishECRDev']['Properties']['Source']['BuildSpec']
+        assert 'common/Publish/buildspec-to-dev.yml' in cf['Resources']['PublishECRDev']['Properties']['Source']['BuildSpec']
         assert 'aws/codebuild/standard:2.0' in cf['Resources']['PublishECRDev']['Properties']['Environment']['Image']

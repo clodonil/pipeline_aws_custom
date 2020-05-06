@@ -273,7 +273,7 @@ class NewCodeBuild:
         title = 'Aqua'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Aqua-{params['branchname']}"
-        aqua = self.create_codebuild(title, name.lower(), env, image, '/common/container-security/buildspec.yml')
+        aqua = self.create_codebuild(title, name.lower(), env, image, 'common/container-security/buildspec.yml')
         return aqua
 
     def PublishECRDev(self, **params):
@@ -300,7 +300,7 @@ class NewCodeBuild:
         title = 'PublishECRDev'
         image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(title, name.lower(), env, image, '/common/Publish/buildspec-to-dev.yml')
+        ecr = self.create_codebuild(title, name.lower(), env, image, 'common/Publish/buildspec-to-dev.yml')
         return ecr
 
     def DeployECSDev(self, **params):
@@ -308,7 +308,7 @@ class NewCodeBuild:
         title = 'DeployECSDev'
         image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/deploy/buildspec_ecs.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
         return deploy_ecs
 
     def PublishECRHomol(self, **params):
@@ -316,7 +316,7 @@ class NewCodeBuild:
         title = 'PublishECRHomol'
         image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(title, name.lower(), env, image, '/common/publish/buildspec_ecr.yml')
+        ecr = self.create_codebuild(title, name.lower(), env, image, 'common/publish/buildspec_ecr.yml')
         return ecr
 
     def DeployECSHomol(self, **params):
@@ -324,7 +324,7 @@ class NewCodeBuild:
         title = 'DeployECSHomol'
         image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/deploy/buildspec_ecs.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
         return deploy_ecs
 
     def ParametersApp(self, **params):
@@ -342,7 +342,7 @@ class NewCodeBuild:
         title = 'ParametersApp'
         image = self.ImageCustom('ParametersApp', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-ParametersApp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/EnvParameters/buildspec.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/EnvParameters/buildspec.yml')
         return deploy_ecs
 
     def AuditApp(self, **params):
@@ -358,5 +358,5 @@ class NewCodeBuild:
         title = 'AuditApp'
         image = self.ImageCustom('AuditApp', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-AuditApp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, '/common/audit/buildspec.yml')
+        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/audit/buildspec.yml')
         return deploy_ecs
