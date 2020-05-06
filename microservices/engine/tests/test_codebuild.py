@@ -72,7 +72,7 @@ class TestCodeBuild:
         print(code_buildspec)
         assert 'Cache' in code_buildspec['Resources']['Testecodebuild']['Properties']
         assert 'S3' in code_buildspec['Resources']['Testecodebuild']['Properties']['Cache']['Type']
-        assert '!Sub ${AWS::AccountId}-cache' in code_buildspec['Resources']['Testecodebuild']['Properties']['Cache']['Location']
+        assert '${AWS::AccountId}-cache' in code_buildspec['Resources']['Testecodebuild']['Properties']['Cache']['Location']['Fn::Sub']
 
     def test_deve_retornar_um_codebuild_customizado_sem_cache_definido(self, params):
         codebuild  = NewCodeBuild(params['role'])

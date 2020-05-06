@@ -42,7 +42,10 @@ class NewPipeline:
         elif type == 'Source':
             provider = 'CodeCommit'
             category = 'Source'
-
+            if 'OutputArtifacts' in configuration:
+                outputartifacts = configuration.pop('OutputArtifacts')
+            else:
+                outputartifacts = project_name
             typeId = ActionTypeId(
                 Category=category,
                 Owner="AWS",
@@ -54,7 +57,7 @@ class NewPipeline:
                     project_name,
                     Name=name,
                     ActionTypeId=typeId,
-                    OutputArtifacts=[OutputArtifacts(Name=name)],
+                    OutputArtifacts=[OutputArtifacts(Name=outputartifacts)],
                     Configuration=config,
                     RoleArn=role,
                     RunOrder=runorder
@@ -64,11 +67,10 @@ class NewPipeline:
                     project_name,
                     Name=name,
                     ActionTypeId=typeId,
-                    OutputArtifacts=[OutputArtifacts(Name=name)],
+                    OutputArtifacts=[OutputArtifacts(Name=outputartifacts)],
                     Configuration=config,
                     RunOrder=runorder
                 )
-
         return action
 
     def create_stage(self, name, list_actions):

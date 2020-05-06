@@ -189,17 +189,16 @@ class NewTemplate:
     def generate_sources(self, stages, env, reponame, role, sharedlibrary_release):
         action = {}
         pipeline = NewPipeline()
-        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false"}
+        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false", "OutputArtifacts" : "Libs"}
         action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
         for t_codebuild in stages:
             if 'Source' in t_codebuild or 'Source::custom' in t_codebuild:
                 if t_codebuild == 'Source':
-                    configuration = {'RepositoryName': reponame, 'BranchName': env}
+                    configuration = {'RepositoryName': reponame, 'BranchName': env, 'OutputArtifacts': 'App' }
                 if 'Source::custom' in t_codebuild:
                     configuration = {}
                     for config in t_codebuild['Source::custom']:
                         configuration.update(config)
-
                     if 'BranchName' not in configuration:
                         configuration.update({'BranchName': env})
                 action['Source'].append(
@@ -220,10 +219,8 @@ class NewTemplate:
         return [sg]
 
     def generate_action(self, list_codebuild, pipeline_template, reponame, env):
-        featurename,microservicename = reponame.split('-')
         pipeline = NewPipeline()
         action = {}
-        projeto = reponame.replace('-','').lower()
         for code in list_codebuild:
             title = code.title.lower()
             configuration = 0
@@ -233,12 +230,6 @@ class NewTemplate:
                     code_template_env = f"{code_template}{env}"
                     if code_template.lower()  == title or code_template_env.lower()  == title:
                         configuration = list(t.values())[0]
-            configuration['PrimarySource'] = reponame
-            if isinstance(configuration['InputArtifacts'], list):
-                configuration['InputArtifacts'][0] = reponame
-            else:
-                if configuration['InputArtifacts'] == "REPOAPP":
-                   configuration['InputArtifacts'] = reponame
             runorder = configuration.pop('runorder')
             configuration['ProjectName'] = code.Name
             action[title] = pipeline.create_action(title.capitalize(), int(runorder), configuration, 'Build')

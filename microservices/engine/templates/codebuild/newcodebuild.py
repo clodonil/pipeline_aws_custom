@@ -1,8 +1,8 @@
-from sqlite3 import Cache
+
 
 from troposphere.codebuild import (
     Artifacts, Environment, Source, Project, VpcConfig, ProjectCache)
-from troposphere import Ref
+from troposphere import Ref, Sub
 from tools.config import version
 
 
@@ -69,7 +69,7 @@ class NewCodeBuild:
 
         if cache:
             use_cache = ProjectCache(
-                Location = '!Sub ${AWS::AccountId}-cache',
+                Location = Sub('${AWS::AccountId}-cache'),
                 Type = 'S3',
                 Modes = ['LOCAL_CUSTOM_CACHE']
             )
