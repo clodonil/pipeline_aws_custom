@@ -538,7 +538,7 @@ class TestCodePipeline:
                     assert len(actions[1]['Actions']) == 8
                     assert len(actions[2]['Actions']) == 2
                     assert len(actions[4]['Actions']) == 2
-                #os.remove('swap/Pipeline-Python-develop-000000.json')
+                os.remove('swap/Pipeline-Python-develop-000000.json')
 
     def test_deve_retornar_pipeline_master(self, params, imageCustom, payloads):
         for pipe in params['templates']:
