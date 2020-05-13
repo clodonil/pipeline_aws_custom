@@ -71,7 +71,7 @@ class TestCodePipeline:
             'payload_3.yml',
             'payload_4.yml',
             'payload_5.yml',
-            'payload_6.yml',
+            'payload_6.yml'
         ]
         return payload
     def gerando_cloudformation(self, resource):

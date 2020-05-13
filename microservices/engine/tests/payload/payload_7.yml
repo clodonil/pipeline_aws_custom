@@ -1,0 +1,38 @@
+---
+version: 1
+template: app-ecs
+runtime: python:3.7
+provider: aws
+Parameter:
+    - Projeto: Pipeline-Python
+pipeline:
+    develop:
+        - Source
+        - Continuous_Integration::custom:
+            - testmultant:
+                - source: App
+                - environment:
+                    - Name : chave
+                    - Value: valor
+                - runorder: 4
+        - custom::Seguranca:
+            - seguranca1:
+                - source: Build
+                - environment:
+                - runorder: 1
+        - DeployDev
+        - custom::DAST:
+            - teste1:
+                - source: Build
+                - environment:
+                - runorder: 1
+            - teste2:
+                - source: Teste1
+                - environment:
+                    - Name : URL
+                    - Value: www.globo.com
+                - imagecustom: linuxcustom
+                - runorder: 2
+callback:
+    protocolo: email
+    endpoint: clodonil@nisled.org

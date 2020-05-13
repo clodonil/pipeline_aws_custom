@@ -18,7 +18,7 @@ pipeline:
                     - Name : chave
                     - Value: valor
                 - imagecustom: linuxcustom
-                - runorder: 2
+                - runorder: 4
         - DeployDev
 callback:
     protocolo: email

@@ -20,7 +20,7 @@ aws_region = 'us-east-1'
 s3_bucket = 'https://wasabi-templates.s3.amazonaws.com/'
 
 ### CodeBuild
-codebuild_timeoutInMinutes = 10
+codebuild_timeoutInMinutes = 400
 codebuild_image_default = "aws/codebuild/standard:2.0"
 RoleCodeBuild = "RoleCodeBuildRole"
 

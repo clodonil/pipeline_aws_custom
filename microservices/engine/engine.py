@@ -49,9 +49,9 @@ def save_s3_send_sqs(template_params, requestID, file_template, event):
            "requestID": requestID
        }
        print("Mensagem Enviada para para Fila de Deploy")
-       #sqs_send(filas['deploy'], msg)
+       sqs_send(filas['deploy'], msg)
        print("Deletando a mensagem da fila de processamento")
-       #sqs_delete(event)
+       sqs_delete(event)
 
 def main():
     while True:

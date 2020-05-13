@@ -99,8 +99,9 @@ class NewTemplate:
                 retorno['imagemcustom'] = params['imagecustom']
             elif 'environment' in params:
                 env = {}
-                for dic_params in params['environment']:
-                    env.update(dic_params)
+                if 'environment' in params and params['environment'] != None:
+                   for dic_params in params['environment']:
+                       env.update(dic_params)
                 retorno['env'] = env
         return retorno
 
@@ -143,7 +144,11 @@ class NewTemplate:
                                 'runorder': params['runorder']
                             }}
                         stages_temp.append(configuration)
-                        list_codebuild.append(codebuild.create_codebuild(temp_name, temp_name, params['env'], params['imagemcustom']))
+                        envs =[]
+                        if 'env' in params:
+                            envs.append(params.get('env'))
+
+                        list_codebuild.append(codebuild.create_codebuild(temp_name, temp_name, envs, params.get('imagemcustom')))
 
                     # Adicionando os codebuild do padrao
                     if t_codebuild != 'source':
@@ -170,7 +175,11 @@ class NewTemplate:
                                         'runorder': params['runorder']}}
                         stages_temp.append(configuration)
                         codebuildname = temp_name
-                        list_codebuild.append(codebuild.create_codebuild(codebuildname, codebuildname, params['env'], params['imagemcustom']))
+                        envs =[]
+                        if 'env' in params:
+                            envs.append(params.get('env'))
+                        list_codebuild.append(codebuild.create_codebuild(codebuildname, codebuildname, envs, params.get('imagemcustom')))
+
                     pipeline_template[stage_name].extend(stages_temp)
             if not stage_custom_used:
                 cont_stage += 1
@@ -191,6 +200,7 @@ class NewTemplate:
         pipeline = NewPipeline()
         shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false", "OutputArtifacts" : "Libs"}
         action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
+        #action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source')]
         for t_codebuild in stages:
             if 'Source' in t_codebuild or 'Source::custom' in t_codebuild:
                 if t_codebuild == 'Source':

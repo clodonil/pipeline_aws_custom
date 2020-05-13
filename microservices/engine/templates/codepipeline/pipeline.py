@@ -43,9 +43,10 @@ class NewPipeline:
             provider = 'CodeCommit'
             category = 'Source'
             if 'OutputArtifacts' in configuration:
-                outputartifacts = configuration.pop('OutputArtifacts')
+                outputartifacts = config.pop('OutputArtifacts')
             else:
                 outputartifacts = project_name
+
             typeId = ActionTypeId(
                 Category=category,
                 Owner="AWS",

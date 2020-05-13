@@ -40,7 +40,6 @@ class NewCodeBuild:
             pathBuildSpec = f'{buildspec}'
         else:
             pathBuildSpec = f'pipeline/buildspec_{name.lower()}.yml'
-
         if isinstance(envs, list):
             if all(isinstance(env, dict) for env in envs):
                 for env in envs:
@@ -330,11 +329,11 @@ class NewCodeBuild:
     def ParametersApp(self, **params):
         env =[
             {
-                'Name': 'microservicename',
+                'Name': 'MicroServiceName',
                 'Value': params['microservicename']
             },
             {
-                'Name': 'featurename',
+                'Name': 'FeatureName',
                 'Value': params['featurename']
             }
         ]
