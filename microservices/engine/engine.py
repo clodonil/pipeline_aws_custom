@@ -7,15 +7,11 @@ from tools.dynamodb import get_dy_template, get_sharedlibrary_release, get_image
 from daemonize import Daemonize
 import json
 import time
-import os
-import logging
-
-
+from tools.log import logger, WasabiLog
 
 pid = "/tmp/engine.pid"
-logging.basicConfig(filename='wasabi.log',format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',level=logging.DEBUG)
 
-
+@WasabiLog
 def setParams(payload, env):
     template = payload['payload']['template']
     pipeline_stages = get_dy_template(template)
@@ -35,10 +31,13 @@ def setParams(payload, env):
         'imageCustom': imageCustom,
         'type': template
     }
+    logger.info(f'Params: {template_params}')
     return template_params
 
+@WasabiLog
 def save_s3_send_sqs(template_params, requestID, file_template, event):
     bucket = s3_bucket.split('.')[0].replace('https://','')
+    logger.info(f'Enviando template para o bucket {bucket},{file_template}')
     if upload_file_s3(bucket, file_template):
        f_tp = file_template.split('/')[-1]
        f_template = f"{s3_bucket}{f_tp}"
@@ -48,36 +47,32 @@ def save_s3_send_sqs(template_params, requestID, file_template, event):
            "pipelinename": template_params['params']['Projeto'],
            "requestID": requestID
        }
-       print("Mensagem Enviada para para Fila de Deploy")
+       logger.info(f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
        sqs_send(filas['deploy'], msg)
-       print("Deletando a mensagem da fila de processamento")
+       logger.info(f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
        sqs_delete(event)
 
 def main():
     while True:
-     #   try:
+        try:
             for event in sqs_receive(filas['processing']):
                 payload = json.loads(event.body)
                 requestID = payload['requestID']
-                logging.debug(f"RequestId: {requestID} - Account: {payload['account']}")
+                logger.info(f'Event: {event.body}')
 
                 # Template Base
-                print("criando o template")
                 codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
                 codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
                 template_params = setParams(payload, 'develop')
                 pipeline = NewTemplate(codepipeline_roles, codebuild_role, DevSecOps_Role)
                 file_template = pipeline.generate(tp=template_params)
-                print("Enviando o template para o Bucket")
+                logger.info(f'File Template: {file_template}')
                 save_s3_send_sqs(template_params, requestID,file_template, event)
 
-        #         try:
-        #             os.remove(file_template)
-        #         except IOError as error:
-        #             print(error)
-        # except NameError as error:
-        #     print('Erro ao validar', str(error))
-        # time.sleep(polling_time)
+        except Exception as error:
+           logger.warning(f'Error: {error}, Event: {requestID}')
+        time.sleep(polling_time)
+
 #daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
 #daemon.start()
 main()

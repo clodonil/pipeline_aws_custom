@@ -1,4 +1,4 @@
-.PHONY: help clean clean-build coverage lint
+.PHONY: help clean clean-build coverage lint mut
 .DEFAULT: help
 
 help:
@@ -34,3 +34,6 @@ test:
 lint:
 	flake8 --ignore E305,E501 --exclude .git,__pycache__
 	bandit -r -lll .
+	
+mut:	
+	mut.py  --target templates/*  --unit-test tests/  --runner pytest --coverage

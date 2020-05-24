@@ -15,15 +15,15 @@ def main():
        for event in sqs_receive(filas['payload'] ):
          print("Messagem consumida")
          payload = json.loads(event.body)
-         template = payload['payload']
+         #template = payload['payload']
 
-         result = validate.check_template(template)
+         #result = validate.check_template(template)
 
-         if result['status']:
-           sqs_send(filas['processing'],payload)
-           sqs_delete(event)
-         else:
-            pass
+         #if result['status']:
+         sqs_send(filas['processing'],payload)
+         sqs_delete(event)
+         #else:
+         #   pass
             #protocol = template_yml['callback']['protocolo']
             #endpoint = template_yml['callback']['endpoint']
             #pipelineName = template_yml['callback']['pipelineName']

@@ -9,7 +9,7 @@ filas = {
     "processing" : "wasabi-processing",
     "deploy" : "wasabi-deploy"
 }
-polling_time = 60
+polling_time = 3
 
 #Tabela do Dynamodb
 dynamodb = {

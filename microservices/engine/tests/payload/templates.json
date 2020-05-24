@@ -4,7 +4,7 @@
 			"1-Source": [],
 			"2-Continuous_Integration": [
 				{
-					"ControlVersion": {
+					"Controlversion": {
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -28,7 +28,7 @@
 					}
 				},
 				{
-					"TestUnit": {
+					"Testunit": {
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -52,7 +52,7 @@
 					}
 				},
 				{
-					"AuditApp": {
+					"Auditapp": {
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -60,7 +60,7 @@
 					}
 				},
 				{
-					"ParametersApp": {
+					"Parametersapp": {
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -70,7 +70,7 @@
 			],
 			"3-DeployDev": [
 				{
-				"PublishECRDev": {
+				"Publishecrdev": {
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -78,7 +78,7 @@
 				}
 			},
 				{
-				"DeployECSDev": {
+				"Deployecsdev": {
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -88,7 +88,7 @@
 			],
 			"4-DeployHomol": [
 				{
-				"PublishECRHomol": {
+				"Publishecrhomol": {
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -96,7 +96,7 @@
 				}
 			},
 				{
-				"DeployECSHomol": {
+				"Deployecshomol": {
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",

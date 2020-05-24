@@ -26,8 +26,8 @@ class TestCodeBuild:
                 "all": "image_Build",
                 "python37": "image_custom"
             },
-            "TestUnit": {
-                "all": "imagem_TestUnit"
+            "Testunit": {
+                "all": "imagem_Testunit"
             },
             "Fortify": {
                 "all": "imagem_sast"
@@ -152,15 +152,15 @@ class TestCodeBuild:
         assert 'TesteCodebuild' in codebuild_['Resources']
         assert 'TesteCodebuild' in codebuild__['Resources']
 
-    def test_deve_retornar_codebuild_do_ControlVersion(self, params, imageCustom):
+    def test_deve_retornar_codebuild_do_Controlversion(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
-            codebuild = newcodebuild.ControlVersion(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
+            codebuild = newcodebuild.Controlversion(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
-            assert 'pipeline-teste-controlversion-develop' in cf['Resources']['ControlVersion']['Properties']['Name']
-            assert 'common/controlversion/buildspec.yml' in cf['Resources']['ControlVersion']['Properties']['Source']['BuildSpec']
-            assert 'aws/codebuild/standard:2.0' in cf['Resources']['ControlVersion']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-controlversion-develop' in cf['Resources']['Controlversion']['Properties']['Name']
+            assert 'common/controlversion/buildspec.yml' in cf['Resources']['Controlversion']['Properties']['Source']['BuildSpec']
+            assert 'aws/codebuild/standard:2.0' in cf['Resources']['Controlversion']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_Sast(self, params, imageCustom):
         for runtime in params['runtime']:
@@ -172,28 +172,28 @@ class TestCodeBuild:
             assert f'../01/{runtime}/sast/buildspec.yml' in cf['Resources']['Fortify']['Properties']['Source']['BuildSpec']
             assert 'imagem_sast' in cf['Resources']['Fortify']['Properties']['Environment']['Image']
 
-    def test_deve_retornar_codebuild_do_TestUnit_sem_builcustomizado(self, params, imageCustom):
+    def test_deve_retornar_codebuild_do_Testunit_sem_builcustomizado(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
 
-            codebuild = newcodebuild.TestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
+            codebuild = newcodebuild.Testunit(featurename='pipeline', microservicename='teste', runtime=runtime,branchname='develop', custom=False, imageCustom=imageCustom)
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
-            assert 'pipeline-teste-testunit-develop' in cf['Resources']['TestUnit']['Properties']['Name']
-            assert f"../01/{runtime}/testunit/buildspec.yml" in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
-            assert 'imagem_TestUnit' in cf['Resources']['TestUnit']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-testunit-develop' in cf['Resources']['Testunit']['Properties']['Name']
+            assert f"../01/{runtime}/testunit/buildspec.yml" in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
+            assert 'imagem_Testunit' in cf['Resources']['Testunit']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_TestUnit_com_builcustomizado(self, params, imageCustom):
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
-            codebuild = newcodebuild.TestUnit(featurename='pipeline', microservicename='teste', runtime=runtime,
+            codebuild = newcodebuild.Testunit(featurename='pipeline', microservicename='teste', runtime=runtime,
                                                    branchname='develop', custom=True, imageCustom=imageCustom)
 
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
-            assert 'pipeline-teste-testunit-develop' in cf['Resources']['TestUnit']['Properties']['Name']
-            assert "pipeline/buildspec_testunit.yml" in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
-            assert 'imagem_TestUnit' in cf['Resources']['TestUnit']['Properties']['Environment']['Image']
+            assert 'pipeline-teste-testunit-develop' in cf['Resources']['Testunit']['Properties']['Name']
+            assert "pipeline/buildspec_testunit.yml" in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
+            assert 'imagem_Testunit' in cf['Resources']['Testunit']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_Sonar(self, params, imageCustom):
         for runtime in params['runtime']:
@@ -242,19 +242,19 @@ class TestCodeBuild:
 
     def test_deve_retornar_codebuild_do_deploy_ecs(self, params, imageCustom):
         newcodebuild =  NewCodeBuild(params['role'])
-        codebuild = newcodebuild.DeployECSDev(runtime='python', featurename='pipeline', microservicename='teste', branchname='develop', imageCustom=imageCustom)
+        codebuild = newcodebuild.Deployecsdev(runtime='python', featurename='pipeline', microservicename='teste', branchname='develop', imageCustom=imageCustom)
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
-        assert 'pipeline-teste-deployecs-develop' in cf['Resources']['DeployECSDev']['Properties']['Name']
-        assert 'common/deploy/buildspec_ecs.yml' in cf['Resources']['DeployECSDev']['Properties']['Source']['BuildSpec']
-        assert 'aws/codebuild/standard:2.0' in cf['Resources']['DeployECSDev']['Properties']['Environment']['Image']
+        assert 'pipeline-teste-deployecs-develop' in cf['Resources']['Deployecsdev']['Properties']['Name']
+        assert 'common/deploy/buildspec_ecs.yml' in cf['Resources']['Deployecsdev']['Properties']['Source']['BuildSpec']
+        assert 'aws/codebuild/standard:2.0' in cf['Resources']['Deployecsdev']['Properties']['Environment']['Image']
 
     def test_deve_retornar_codebuild_do_Publish_ECR(self, params, imageCustom):
         newcodebuild =  NewCodeBuild(params['role'])
-        codebuild = newcodebuild.PublishECRDev(runtime='python' , featurename='pipeline', microservicename='teste', branchname='develop', imageCustom=imageCustom)
+        codebuild = newcodebuild.Publishecrdev(runtime='python' , featurename='pipeline', microservicename='teste', branchname='develop', imageCustom=imageCustom)
 
         cf = self.gerando_cloudformation(codebuild)
         print(cf)
-        assert 'pipeline-teste-publishecr-develop' in cf['Resources']['PublishECRDev']['Properties']['Name']
-        assert 'common/Publish/buildspec-to-dev.yml' in cf['Resources']['PublishECRDev']['Properties']['Source']['BuildSpec']
-        assert 'aws/codebuild/standard:2.0' in cf['Resources']['PublishECRDev']['Properties']['Environment']['Image']
+        assert 'pipeline-teste-publishecr-develop' in cf['Resources']['Publishecrdev']['Properties']['Name']
+        assert 'common/Publish/buildspec-to-dev.yml' in cf['Resources']['Publishecrdev']['Properties']['Source']['BuildSpec']
+        assert 'aws/codebuild/standard:2.0' in cf['Resources']['Publishecrdev']['Properties']['Environment']['Image']

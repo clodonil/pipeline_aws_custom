@@ -3,10 +3,12 @@ from troposphere.s3 import Bucket
 from troposphere.codepipeline import (
     Pipeline, Stages, Actions, ActionTypeId, OutputArtifacts, InputArtifacts,
     ArtifactStore, EncryptionKey)
+from tools.log import WasabiLog
 
 
 class NewPipeline:
 
+    @WasabiLog
     def create_action(self, name, runorder, configuration, type, role=""):
         project_name = ''.join(e for e in name if e.isalnum())
         config = configuration.copy()
@@ -74,6 +76,7 @@ class NewPipeline:
                 )
         return action
 
+    @WasabiLog
     def create_stage(self, name, list_actions):
         project_name = ''.join(e for e in name if e.isalnum())
         stage = Stages(
@@ -83,6 +86,7 @@ class NewPipeline:
         )
         return stage
 
+    @WasabiLog
     def create_pipeline(self, name, role, list_stages):
         bucket_name = f"{name}-reports"
         project_name = ''.join(e for e in bucket_name if e.isalnum())

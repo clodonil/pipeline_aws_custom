@@ -6,7 +6,7 @@ import pytest
 import time
 import json
 import os
-
+import shutil
 
 class TestCodePipeline:
     @pytest.fixture
@@ -147,13 +147,13 @@ class TestCodePipeline:
             assert len(cf['Resources']) == 10
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSDev' in cf['Resources']
+            assert 'Deployecsdev' in cf['Resources']
             assert 'Fortify' in cf['Resources']
-            assert 'PublishECRDev' in cf['Resources']
+            assert 'Publishecrdev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
-            assert 'TestUnit' in cf['Resources']
+            assert 'Testunit' in cf['Resources']
             assert '../01/python/3.7/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
-            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
 
 
     def test_deve_retornar_codebuild_do_template_app_ecs_com_buildCustomizado(self, params, imageCustom):
@@ -171,13 +171,13 @@ class TestCodePipeline:
             assert len(cf['Resources']) == 10
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSDev' in cf['Resources']
+            assert 'Deployecsdev' in cf['Resources']
             assert 'Fortify' in cf['Resources']
-            assert 'PublishECRDev' in cf['Resources']
+            assert 'Publishecrdev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
-            assert 'TestUnit' in cf['Resources']
+            assert 'Testunit' in cf['Resources']
             assert 'pipeline/buildspec_build.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
-            assert 'pipeline/buildspec_testunit.yml' in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert 'pipeline/buildspec_testunit.yml' in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
 
     def test_deve_retornar_codebuild_do_template_app_ecs_com_action_customizado(self, params, imageCustom):
         for pipe in params['templates']:
@@ -193,13 +193,13 @@ class TestCodePipeline:
             assert len(cf['Resources']) == 11
             assert 'Aqua' in cf['Resources']
             assert 'Build' in cf['Resources']
-            assert 'DeployECSDev' in cf['Resources']
+            assert 'Deployecsdev' in cf['Resources']
             assert 'Fortify' in cf['Resources']
-            assert 'PublishECRDev' in cf['Resources']
+            assert 'Publishecrdev' in cf['Resources']
             assert 'Sonar' in cf['Resources']
-            assert 'TestUnit' in cf['Resources']
+            assert 'Testunit' in cf['Resources']
             assert '../01/python/3.7/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
-            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
             assert 'testmultant' in cf['Resources']
 
     def test_deve_retornar_codebuild_do_template_app_ecs_com_stage_customizado(self, params, imageCustom):
@@ -216,13 +216,13 @@ class TestCodePipeline:
             assert len(cf['Resources']) == 13
             assert 'Aqua' in resources
             assert 'Build' in resources
-            assert 'DeployECSDev' in resources
+            assert 'Deployecsdev' in resources
             assert 'Fortify' in resources
-            assert 'PublishECRDev' in resources
+            assert 'Publishecrdev' in resources
             assert 'Sonar' in resources
-            assert 'TestUnit' in cf['Resources']
+            assert 'Testunit' in cf['Resources']
             assert '../01/python/3.7/build/buildspec.yml' in cf['Resources']['Build']['Properties']['Source']['BuildSpec']
-            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['TestUnit']['Properties']['Source']['BuildSpec']
+            assert '../01/python/3.7/testunit/buildspec.yml' in cf['Resources']['Testunit']['Properties']['Source']['BuildSpec']
             assert 'seguranca2' in resources
             assert 'seguranca1' in resources
             assert 'seguranca2' in resources
@@ -313,7 +313,8 @@ class TestCodePipeline:
                 cf_pipeline = self.generate_action(pipe,'develop', payload, imageCustom)
                 cf = self.gerando_cloudformation(cf_pipeline)
                 print(cf['Resources'])
-                if payload == 'payload_5.yml':
+                print(payload)
+                if payload == 'payload_5.yml' or payload == 'payload_8.yml':
                     assert len(cf['Resources']) == 11
                 elif payload == 'payload_6.yml':
                     assert len(cf['Resources']) == 13
@@ -340,7 +341,7 @@ class TestCodePipeline:
                 cf_pipeline = self.generate_pipeline(pipe,'develop', payload, imageCustom)
                 cf = self.gerando_cloudformation(cf_pipeline)
                 print(payload)
-                print(cf['Resources'])
+                print(cf['Resources'].keys())
                 if payload == 'payload_6.yml':
                     assert len(cf['Resources']) == 5
                 else:
@@ -409,8 +410,7 @@ class TestCodePipeline:
             cf_pipeline = app.generate_pipeline(cf_stages, f"{reponame}-{env}")
             cf = self.gerando_cloudformation(cf_pipeline)
             template = json.dumps(cf)
-            time.sleep(0.2)
-            os.rmdir('swap')
+            shutil.rmtree('swap')
             app.save_swap(reponame, template, env, '00000')
             assert os.path.isdir('swap') == True
             assert os.path.isfile('swap/Pipeline-Python-develop-00000.json') == True
@@ -540,9 +540,156 @@ class TestCodePipeline:
                     assert len(actions[4]['Actions']) == 2
                 os.remove('swap/Pipeline-Python-develop-000000.json')
 
+    def test_deve_retornar_pipeline_com_action_obrigatorio_com_source_personalizado(self, params, payloads, imageCustom):
+        """
+        Este teste deve validar a alteracao de um codebuild obrigatorio como o build, mas com o source personalizado
+        """
+        for name_template in params['templates']:
+            env = 'develop'
+            template_pipeline = self.load_template(name_template, env)
+            dados = self.gettemplate('payload_8.yml', env)
+            codepipeline_role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
+            codebuild_role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            app = NewTemplate(codepipeline_role, codebuild_role, DevSecOps_Role)
+            template_params = {
+                'env': env,
+                'runtime': dados['runtime'],
+                'stages': dados['stages'],
+                'account': '000000',
+                'pipeline_stages': template_pipeline,
+                'params': dados['params'],
+                'release': 'release-10',
+                'imageCustom': imageCustom
+            }
+            file_template = app.generate(tp=template_params)
+            # Abrindo a pipeline criada
+            ft = open(file_template)
+            ftemplate = json.loads(ft.read())
+            ft.close()
+            resources = ftemplate['Resources'].keys()
+            l_actions = ftemplate['Resources']['PipelinePythonDevelop']['Properties']['Stages']
+            for actions in l_actions:
+                for action in actions['Actions']:
+                    if action['ActionTypeId']['Category'] != 'Source':
+                        print(action)
+                        if action['Name'] == 'Build':
+                            assert [{'Name': 'Normalizacao'}] == [item for item in action['InputArtifacts'] if item['Name'] == 'Normalizacao']
+                            assert 'Normalizacao' == action['Configuration']['PrimarySource']
+                        if action['Name'] == 'Testunit':
+                            assert [{'Name': 'Normalizacao'}] == [item for item in action['InputArtifacts'] if item['Name'] == 'Normalizacao']
+                            assert 'Normalizacao' == action['Configuration']['PrimarySource']
+                        if action['Name'] == 'Sonar':
+                            assert [{'Name': 'Normalizacao'}] == [item for item in action['InputArtifacts'] if item['Name'] == 'Normalizacao']
+                            assert 'Normalizacao' == action['Configuration']['PrimarySource']
+
+    def test_deve_retornar_pipeline_com_action_customizado_com_multiplos_sources(self, params, payloads, imageCustom):
+        """
+        Este teste deve validar a alteracao de um codebuild obrigatorio como o build, mas com o source personalizado
+        """
+        for name_template in params['templates']:
+            env = 'develop'
+            template_pipeline = self.load_template(name_template, env)
+            dados = self.gettemplate('payload_8.yml', env)
+            codepipeline_role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
+            codebuild_role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            app = NewTemplate(codepipeline_role, codebuild_role, DevSecOps_Role)
+            template_params = {
+                'env': env,
+                'runtime': dados['runtime'],
+                'stages': dados['stages'],
+                'account': '000000',
+                'pipeline_stages': template_pipeline,
+                'params': dados['params'],
+                'release': 'release-10',
+                'imageCustom': imageCustom
+            }
+            file_template = app.generate(tp=template_params)
+            # Abrindo a pipeline criada
+            ft = open(file_template)
+            ftemplate = json.loads(ft.read())
+            ft.close()
+            resources = ftemplate['Resources'].keys()
+            l_actions = ftemplate['Resources']['PipelinePythonDevelop']['Properties']['Stages']
+            for actions in l_actions:
+                for action in actions['Actions']:
+                    if action['ActionTypeId']['Category'] != 'Source':
+                        if action['Name'] == 'Normalizacao':
+                            print(action)
+                            assert [{'Name': 'App'}, {'Name': 'App2'}, {'Name': 'App3'}] == action['InputArtifacts']
+                            assert 'App' == action['Configuration']['PrimarySource']
+                        if action['Name'] == 'Testmultant':
+                            print(action)
+                            assert [{'Name': 'Build'}] == action['InputArtifacts']
+                            assert 'Build' == action['Configuration']['PrimarySource']
+
+    def test_deve_retornar_pipeline_com_stages_ordenados(self, params, payloads, imageCustom):
+        """
+        Este teste deve validar a alteracao de um codebuild obrigatorio como o build, mas com o source personalizado
+        """
+        for name_template in params['templates']:
+            env = 'develop'
+            template_pipeline = self.load_template(name_template, env)
+            dados = self.gettemplate('payload_9.yml', env)
+            codepipeline_role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
+            codebuild_role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
+            app = NewTemplate(codepipeline_role, codebuild_role, DevSecOps_Role)
+            template_params = {
+                'env': env,
+                'runtime': dados['runtime'],
+                'stages': dados['stages'],
+                'account': '000000',
+                'pipeline_stages': template_pipeline,
+                'params': dados['params'],
+                'release': 'release-10',
+                'imageCustom': imageCustom
+            }
+            file_template = app.generate(tp=template_params)
+            # Abrindo a pipeline criada
+            ft = open(file_template)
+            ftemplate = json.loads(ft.read())
+            ft.close()
+            resources = ftemplate['Resources'].keys()
+            l_actions = ftemplate['Resources']['PipelinePythonDevelop']['Properties']['Stages']
+
+            list_stages = [ stage['Name'] for stage in l_actions]
+            print(list_stages)
+            assert ['Source', 'Continuous_Integration', 'Seguranca', 'Seguranca3', 'DeployDev'] == list_stages
+
+
+    def test_deve_retornar_codebuild_eh_madatorio(self, params):
+        for name_template in params['templates']:
+            buildName = ['Build', 'Customizado']
+            env = 'develop'
+            template_pipeline = self.load_template(name_template, env)
+            pipeline = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
+            mandatorio = pipeline.codebuild_mandatory(buildName[0], template_pipeline)
+            customizado = pipeline.codebuild_mandatory(buildName[1], template_pipeline)
+            assert mandatorio == True
+            assert customizado == False
+
+    def test_deve_retornar_codebuild_eh_source(self, params):
+        for name_template in params['templates']:
+            env = 'develop'
+            template_pipeline = self.load_template(name_template, env)
+            pipeline = NewTemplate('codepipeline_role', 'codebuild_role', 'DevSecOps_Role')
+            source1 = pipeline.check_is_source('Source')
+            source2 = pipeline.check_is_source({'Source::custom': [{'RepositoryName': 'Tools'}]})
+            source3 = pipeline.check_is_source('Build')
+            source4 = pipeline.check_is_source({'App::custom': [{'RepositoryName': 'Tools'}]})
+
+            assert source1 == True
+            assert source2 == True
+            assert source3 == False
+            assert source4 == False
+
+
     def test_deve_retornar_pipeline_master(self, params, imageCustom, payloads):
         for pipe in params['templates']:
                 cf_pipeline = self.generate_pipeline(pipe,'master', 'payload_1.yml', imageCustom)
                 cf = self.gerando_cloudformation(cf_pipeline)
                 print(cf['Resources'].keys())
                 assert len(cf['Resources']) == 3
+
