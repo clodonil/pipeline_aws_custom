@@ -4,6 +4,7 @@ from troposphere import Ref, Sub
 from tools.config import version
 from tools.log import WasabiLog
 
+
 class NewCodeBuild:
     def __init__(self, roleCodeBuild):
         self.roleCodeBuild = roleCodeBuild
@@ -24,7 +25,7 @@ class NewCodeBuild:
         self.timeoutInMinutes = 10
 
     @WasabiLog
-    def create_codebuild(self, title, name, envs, imagecustom=False, buildspec=False,cache=True):
+    def create_codebuild(self, title, name, envs, imagecustom=False, buildspec=False, cache=True):
         project_name = title
         # imagem do codebuild
         if imagecustom:
@@ -57,7 +58,7 @@ class NewCodeBuild:
             Type=self.type,
             EnvironmentVariables=envs,
             PrivilegedMode='true',
-            ImagePullCredentialsType = serviceRole
+            ImagePullCredentialsType=serviceRole
         )
 
         source = Source(
@@ -67,9 +68,9 @@ class NewCodeBuild:
 
         if cache:
             use_cache = ProjectCache(
-                Location = Sub('${AWS::AccountId}-cache'),
-                Type = 'S3',
-                Modes = ['LOCAL_CUSTOM_CACHE']
+                Location=Sub('${AWS::AccountId}-cache'),
+                Type='S3',
+                Modes=['LOCAL_CUSTOM_CACHE']
             )
             codebuild = Project(
                 project_name,
@@ -115,8 +116,8 @@ class NewCodeBuild:
                 "Value": 'https://sqs.sa-east-1.amazonaws.com/049557819541/codemetrics'
             },
             {
-                "Name" : 'RUNTIME',
-                "Value" : params['runtime']
+                "Name": 'RUNTIME',
+                "Value": params['runtime']
             },
             {
                 "Name": 'PIPELINETYPE',
@@ -130,14 +131,15 @@ class NewCodeBuild:
         title = 'Controlversion'
         image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Controlversion-{params['branchname']}"
-        controlversion = self.create_codebuild('Controlversion', name.lower(), env, image, f'common/controlversion/buildspec.yml')
+        buildspec = "common/controlversion/buildspec.yml"
+        controlversion = self.create_codebuild('Controlversion', name.lower(), env, image, buildspec)
         return controlversion
 
     @WasabiLog
     def Fortify(self, **params):
-        env =[
+        env = [
             {
-                'Name' : 'BranchName',
+                'Name': 'BranchName',
                 'Value': params['branchname']
 
             },
@@ -244,9 +246,9 @@ class NewCodeBuild:
 
     @WasabiLog
     def Aqua(self, **params):
-        env =[
+        env = [
             {
-                'Name' : 'BranchName',
+                'Name': 'BranchName',
                 'Value': params['branchname']
 
             },
@@ -283,9 +285,9 @@ class NewCodeBuild:
 
     @WasabiLog
     def Publishecrdev(self, **params):
-        env =[
+        env = [
             {
-                'Name' : 'pipeline_environment',
+                'Name': 'pipeline_environment',
                 'Value': params['branchname']
 
             },
@@ -338,7 +340,7 @@ class NewCodeBuild:
 
     @WasabiLog
     def Parametersapp(self, **params):
-        env =[
+        env = [
             {
                 'Name': 'MicroServiceName',
                 'Value': params['microservicename']
@@ -358,9 +360,9 @@ class NewCodeBuild:
     @WasabiLog
     def Auditapp(self, **params):
         # Todo: PIPELINETYPE requerer uma variável com o nome APP
-        env =[
+        env = [
             {
-                'Name' : 'PIPELINETYPE',
+                'Name': 'PIPELINETYPE',
                 'Value': params['branchname']
 
             }

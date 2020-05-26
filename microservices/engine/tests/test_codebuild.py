@@ -13,7 +13,7 @@ class TestCodeBuild:
             'kms': 'kmskey',
             'env': [{'Name': 'varname1', 'Value':'varvalue1'}, {'Name': 'varname2', 'Value':'varvalue2'}],
             'runtime': ['python36']
-         }
+        }
         return msg
 
     @pytest.fixture
@@ -187,7 +187,7 @@ class TestCodeBuild:
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
             codebuild = newcodebuild.Testunit(featurename='pipeline', microservicename='teste', runtime=runtime,
-                                                   branchname='develop', custom=True, imageCustom=imageCustom)
+                                              branchname='develop', custom=True, imageCustom=imageCustom)
 
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
@@ -199,7 +199,7 @@ class TestCodeBuild:
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
             sonar = newcodebuild.Sonar(featurename='pipeline', microservicename='teste', runtime=runtime,
-                                                   branchname='develop', custom=False, imageCustom=imageCustom)
+                                       branchname='develop', custom=False, imageCustom=imageCustom)
             cf = self.gerando_cloudformation(sonar)
             print(cf)
             assert 'pipeline-teste-sonar-develop' in cf['Resources']['Sonar']['Properties']['Name']
@@ -210,7 +210,7 @@ class TestCodeBuild:
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
             codebuild = newcodebuild.Build(featurename='pipeline', microservicename='teste', runtime=runtime,
-                                                   branchname='develop', custom=False, imageCustom=imageCustom)
+                                           branchname='develop', custom=False, imageCustom=imageCustom)
 
             cf = self.gerando_cloudformation(codebuild)
             print(cf)
@@ -222,7 +222,7 @@ class TestCodeBuild:
         for runtime in params['runtime']:
             newcodebuild =  NewCodeBuild(params['role'])
             codebuild = newcodebuild.Build(featurename='pipeline', microservicename='teste', runtime=runtime,
-                                                   branchname='develop', custom=True, imageCustom=imageCustom)
+                                           branchname='develop', custom=True, imageCustom=imageCustom)
 
             cf = self.gerando_cloudformation(codebuild)
             print(cf)

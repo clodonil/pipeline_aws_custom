@@ -36,4 +36,4 @@ lint:
 	bandit -r -lll .
 	
 mut:	
-	mut.py  --target templates/*  --unit-test tests/  --runner pytest --coverage
+	time mut.py  --target templates/*  --unit-test tests/  --runner pytest --coverage

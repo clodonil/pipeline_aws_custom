@@ -11,10 +11,14 @@ from tools.log import logger, WasabiLog
 
 pid = "/tmp/engine.pid"
 
+
 @WasabiLog
 def setParams(payload, env):
     template = payload['payload']['template']
-    pipeline_stages = get_dy_template(template)
+    dynamodb_template = get_dy_template(template)
+    logger.info(f"Dados_Dynamodb: {dynamodb_template}")
+    pipeline_stages = dynamodb_template.get('pipeline')
+    estrutura = dynamodb_template.get('estrutura')
     release = get_sharedlibrary_release()
     imageCustom = get_imageCustom()
     params = {}
@@ -29,28 +33,32 @@ def setParams(payload, env):
         'params': params,
         'release': release,
         'imageCustom': imageCustom,
-        'type': template
+        'type': template,
+        'estrutura': estrutura
     }
     logger.info(f'Params: {template_params}')
     return template_params
 
+
 @WasabiLog
 def save_s3_send_sqs(template_params, requestID, file_template, event):
-    bucket = s3_bucket.split('.')[0].replace('https://','')
+    bucket = s3_bucket.split('.')[0].replace('https://', '')
     logger.info(f'Enviando template para o bucket {bucket},{file_template}')
     if upload_file_s3(bucket, file_template):
-       f_tp = file_template.split('/')[-1]
-       f_template = f"{s3_bucket}{f_tp}"
-       msg = {
-           "url": f_template,
-           "account": template_params['account'],
-           "pipelinename": template_params['params']['Projeto'],
-           "requestID": requestID
-       }
-       logger.info(f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
-       sqs_send(filas['deploy'], msg)
-       logger.info(f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
-       sqs_delete(event)
+        f_tp = file_template.split('/')[-1]
+        f_template = f"{s3_bucket}{f_tp}"
+        msg = {
+            "url": f_template,
+            "account": template_params['account'],
+            "pipelinename": template_params['params']['Projeto'],
+            "requestID": requestID
+        }
+        logger.info(f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
+        logger.info(f"Mensagem: {msg}")
+        sqs_send(filas['deploy'], msg)
+        logger.info(f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
+        sqs_delete(event)
+
 
 def main():
     while True:
@@ -67,12 +75,11 @@ def main():
                 pipeline = NewTemplate(codepipeline_roles, codebuild_role, DevSecOps_Role)
                 file_template = pipeline.generate(tp=template_params)
                 logger.info(f'File Template: {file_template}')
-                save_s3_send_sqs(template_params, requestID,file_template, event)
+                save_s3_send_sqs(template_params, requestID, file_template, event)
 
         except Exception as error:
-           logger.warning(f'Error: {error}, Event: {requestID}')
+            logger.warning(f'Error: {error}, Event: {requestID}')
         time.sleep(polling_time)
 
-#daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
-#daemon.start()
-main()
+daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
+daemon.start()

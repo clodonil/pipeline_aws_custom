@@ -11,7 +11,6 @@ import time
 import os
 from tools.config import dynamodb, aws_region
 
-
 class DyConnect:
     def __init__(self, table, region):
         self.table = table
@@ -45,7 +44,6 @@ def get_dy_template(template_name):
     if 'Item' in stages:
         if 'details' in stages['Item']:
             return stages['Item']['details']
-
     return False
 
 def get_sharedlibrary_release():
@@ -65,3 +63,4 @@ def get_imageCustom():
     if 'Item' in version:
         return version['Item']['details']
     return False
+

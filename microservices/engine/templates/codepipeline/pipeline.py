@@ -1,5 +1,4 @@
 from troposphere import Ref, Sub
-from troposphere.s3 import Bucket
 from troposphere.codepipeline import (
     Pipeline, Stages, Actions, ActionTypeId, OutputArtifacts, InputArtifacts,
     ArtifactStore, EncryptionKey)
@@ -13,6 +12,7 @@ class NewPipeline:
         project_name = ''.join(e for e in name if e.isalnum())
         config = configuration.copy()
         ListInputArtifacts = []
+        action = None
         if type == 'Build':
             provider = 'CodeBuild'
             category = 'Build'
@@ -74,6 +74,25 @@ class NewPipeline:
                     Configuration=config,
                     RunOrder=runorder
                 )
+        elif type == 'Approval':
+
+            typeId = ActionTypeId(
+                Category='Approval',
+                Owner="AWS",
+                Version="1",
+                Provider='Manual'
+            )
+
+            action = Actions(
+                project_name,
+                Name=name,
+                ActionTypeId=typeId,
+                Configuration=config,
+                RunOrder=runorder
+            )
+
+        #                  CustomData: 'Você aprova a entrada desta versão em produção?'
+
         return action
 
     @WasabiLog
@@ -88,11 +107,11 @@ class NewPipeline:
 
     @WasabiLog
     def create_pipeline(self, name, role, list_stages):
-        bucket_name = f"{name}-reports"
-        project_name = ''.join(e for e in bucket_name if e.isalnum())
+        # bucket_name = f"{name}-reports"
+        # project_name = ''.join(e for e in bucket_name if e.isalnum())
 
         title = name.replace('-', ' ').title().replace(' ', '')
-        encrypt = EncryptionKey(Id= Ref('KMSKeyArn'), Type= 'KMS')
+        encrypt = EncryptionKey(Id=Ref('KMSKeyArn'), Type='KMS')
         pipeline = Pipeline(
             title=title,
             Name=name,
@@ -100,8 +119,8 @@ class NewPipeline:
             Stages=list_stages,
             ArtifactStore=ArtifactStore(
                 Type="S3",
-                Location= Sub('${AWS::AccountId}-artefatos'),
-                EncryptionKey= encrypt
+                Location=Sub('${AWS::AccountId}-artefatos'),
+                EncryptionKey=encrypt
             )
         )
         return [pipeline]

@@ -14,7 +14,8 @@ from tools.config import (
     DevToolsAccount,
 )
 import os
-from tools.log import WasabiLog
+from tools.log import WasabiLog, logger
+
 
 class NewTemplate:
     def __init__(self, codepipeline_role, codebuild_role, DevSecOps_Role):
@@ -105,14 +106,14 @@ class NewTemplate:
                 retorno['imagemcustom'] = params['imagecustom']
             elif 'environment' in params:
                 env = {}
-                if 'environment' in params and params['environment'] != None:
+                if ('environment' in params) and (params.get('environment') is not None):
                     for dic_params in params['environment']:
                         env.update(dic_params)
                 retorno['env'] = env
         return retorno
 
     @WasabiLog
-    def codebuild_mandatory(self, buildName,pipeline_template):
+    def codebuild_mandatory(self, buildName, pipeline_template):
         """
         retorna true, se o action eh de um codebuild mandatorio
         """
@@ -124,16 +125,18 @@ class NewTemplate:
         return retorno
 
     @WasabiLog
-    def check_is_source(self, codebuild):
+    def check_is_not_codebuild(self, codebuild):
         check = False
         if isinstance(codebuild, str):
-            if codebuild.lower() == 'source':
-               check = True
+            if codebuild.lower() == 'source' or codebuild.lower() == 'aprovacao':
+                check = True
         elif isinstance(codebuild, dict):
             name_custom_stage = list(codebuild.keys())[0]
             custom = name_custom_stage.split('::')
             if custom[0].lower() == 'source' and custom[1].lower() == 'custom':
-               check = True
+                check = True
+            elif custom[0].lower() == 'aprovacao' and custom[1].lower() == 'custom':
+                check = True
         return check
 
     @WasabiLog
@@ -145,6 +148,7 @@ class NewTemplate:
         if 'BuildCustom' in params:
             if params['BuildCustom'] == 'True':
                 buildcustom = True
+                logger.info(f"Build Customizado: {buildcustom}")
         codebuild = NewCodeBuild(self.codebuild_role)
         cont_stage = 1
         action_custom = 1
@@ -152,8 +156,8 @@ class NewTemplate:
         for t_codebuild in stages:
             stage_custom_used = False
 
-            # Verifica se eh um source, se for nao faz nada
-            if self.check_is_source(t_codebuild):
+            # Verifica se eh um source ou Aprovacao, se for nao faz nada
+            if self.check_is_not_codebuild(t_codebuild):
                 continue
 
             # Cria os codebuild do stage sem customizacao
@@ -167,15 +171,15 @@ class NewTemplate:
             # Cria novos codebuild em stage padrao
             elif isinstance(t_codebuild, dict):
                 name_custom_stage = list(t_codebuild.keys())[0]
-                custom  = name_custom_stage.split('::')
+                custom = name_custom_stage.split('::')
                 stages_temp = []
                 # Customizando o action
                 if custom[-1].lower() == 'custom':
                     for list_yaml in t_codebuild[name_custom_stage]:
                         temp_name = list(list_yaml.keys())[0]
-                        imagemcustom = False
+                        # imagemcustom = False
                         params = self.getparams_codebuild(list_yaml[temp_name])
-                        if self.codebuild_mandatory(temp_name,pipeline_template):
+                        if self.codebuild_mandatory(temp_name, pipeline_template):
                             tstage = custom[0]
                             t_build_template = [item for item in pipeline_template if item.split('-')[1] == tstage][0]
                             for l_codebuild_template in pipeline_template[t_build_template]:
@@ -197,7 +201,7 @@ class NewTemplate:
                                     'runorder': params['runorder']
                                 }}
                             stages_temp.append(configuration)
-                            envs =[]
+                            envs = []
                             if 'env' in params:
                                 envs.append(params.get('env'))
                             list_codebuild.append(codebuild.create_codebuild(temp_name, temp_name, envs, params.get('imagemcustom')))
@@ -219,14 +223,14 @@ class NewTemplate:
                     pipeline_template[stage_name] = []
                     for list_yaml in t_codebuild[name_custom_stage]:
                         temp_name = list(list_yaml.keys())[0]
-                        imagemcustom = False
+                        # imagemcustom = False
                         params = self.getparams_codebuild(list_yaml[temp_name])
                         configuration = {
                             temp_name: {'ProjectName': temp_name, 'PrimarySource': params['source'], 'InputArtifacts': params['source'],
                                         'runorder': params['runorder']}}
                         stages_temp.append(configuration)
                         codebuildname = temp_name
-                        envs =[]
+                        envs = []
                         if 'env' in params:
                             envs.append(params.get('env'))
                         list_codebuild.append(codebuild.create_codebuild(codebuildname, codebuildname, envs, params.get('imagemcustom')))
@@ -250,13 +254,13 @@ class NewTemplate:
     def generate_sources(self, stages, env, reponame, role, sharedlibrary_release):
         action = {}
         pipeline = NewPipeline()
-        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false", "OutputArtifacts" : "Libs"}
-        #action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
-        action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source')]
+        shared_configuration = {'BranchName': sharedlibrary_release, 'RepositoryName': 'pipelineaws-sharedlibrary', "PollForSourceChanges": "false", "OutputArtifacts": "Libs"}
+        action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source', role)]
+        # action['Source'] = [pipeline.create_action('SharedLibrary', "1", shared_configuration, 'Source')]
         for t_codebuild in stages:
             if 'Source' in t_codebuild or 'Source::custom' in t_codebuild:
                 if t_codebuild == 'Source':
-                    configuration = {'RepositoryName': reponame, 'BranchName': env, 'OutputArtifacts': 'App' }
+                    configuration = {'RepositoryName': reponame, 'BranchName': env, 'OutputArtifacts': 'App'}
                 if 'Source::custom' in t_codebuild:
                     configuration = {}
                     for config in t_codebuild['Source::custom']:
@@ -276,8 +280,8 @@ class NewTemplate:
             'SG',
             VpcId=Ref("VPCID"),
             GroupName=f'{projeto}-{branch}',
-            GroupDescription = 'This security group is used to control access to the container',
-            SecurityGroupIngress = [out_all_rule]
+            GroupDescription='This security group is used to control access to the container',
+            SecurityGroupIngress=[out_all_rule]
         )
         return [sg]
 
@@ -292,7 +296,7 @@ class NewTemplate:
                 for t in pipeline_template[k]:
                     code_template = list(t.keys())[0]
                     code_template_env = f"{code_template}{env}"
-                    if code_template.lower()  == title or code_template_env.lower()  == title:
+                    if (code_template.lower() == title) or (code_template_env.lower() == title):
                         configuration = list(t.values())[0]
             runorder = configuration.pop('runorder')
             configuration['ProjectName'] = code.Name
@@ -300,25 +304,21 @@ class NewTemplate:
         return action
 
     @WasabiLog
-    def check_stage_not_env(self, stage, env):
+    def check_stage_not_env(self, estrutura, stage, env):
         '''
         Stages que nao devem estar na pipeline devido o ambiente
         '''
-        stages_not_env = {
-            'develop': ['DeployHomol', 'DeployProd'],
-            'master': ['DeployDev']
-        }
-        if stage in stages_not_env[env]:
+        if stage in estrutura[env]:
             return False
         return True
 
     @WasabiLog
-    def generate_stage(self, pipeline_stages, list_action, env):
+    def generate_stage(self, pipeline_stages, list_action, env, estrutura):
         pipeline = NewPipeline()
         stages = []
         for t_stage in sorted(pipeline_stages):
             control_stage = t_stage.split('-')[1]
-            if self.check_stage_not_env(control_stage, env):
+            if self.check_stage_not_env(estrutura, control_stage, env):
                 if control_stage == 'Source':
                     l_stage = []
                     for stg in list_action[control_stage]:
@@ -353,6 +353,22 @@ class NewTemplate:
         return filename
 
     @WasabiLog
+    def generate_approval(self, stages, pipeline_template):
+        pipeline = NewPipeline()
+        action = {}
+        for stage in stages:
+            if isinstance(stage, str):
+                if stage.lower() == 'aprovacao':
+                    for pipe in pipeline_template:
+                        pipe_stage = pipe.split('-')[1]
+                        if stage.lower() == pipe_stage.lower():
+                            for confs in pipeline_template[pipe]:
+                                name = [item for item in confs.keys()][0]
+                                runorder = confs[name].pop('runorder')
+                                action[name.lower()] = pipeline.create_action(name.capitalize(), int(runorder), confs[name], 'Approval')
+        return action
+
+    @WasabiLog
     def generate(self, **tparams):
         tp = tparams['tp']
         resources = []
@@ -366,9 +382,10 @@ class NewTemplate:
         # create action
         list_action.update(self.generate_sources(tp['stages'], tp['env'], projeto_name, self.DevSecOps_Role, tp['release']))
         list_action.update(self.generate_action(list_codebuild, tp['pipeline_stages'], projeto_name, tp['env']))
+        list_action.update(self.generate_approval(tp['stages'], tp['pipeline_stages']))
 
         # Stage
-        list_stages = self.generate_stage(tp['pipeline_stages'], list_action, tp['env'])
+        list_stages = self.generate_stage(tp['pipeline_stages'], list_action, tp['env'], tp['estrutura'])
 
         # Parameter
         list_params = self.pipeline_parameter()
@@ -376,7 +393,7 @@ class NewTemplate:
         # Pipeline
         resources.extend(list_codebuild)
         resources.extend(self.generate_pipeline(list_stages, pipeline_name))
-        resources.extend(self.create_security_groups(projeto_name,tp['env']))
+        resources.extend(self.create_security_groups(projeto_name, tp['env']))
 
         # Template
         template = self.generate_template(list_params, resources)

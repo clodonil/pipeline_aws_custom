@@ -121,6 +121,22 @@ class TestCodePipeline:
         assert 'BuildApp' in cf['Resources']
         assert 1 == cf['Resources']['BuildApp']['RunOrder']
 
+    def test_deve_retornar_um_Action_tipo_aprovacao(self, params):
+        #        action = params['action']
+        name = 'Aprovacao'
+        config = {'CustomData' : 'Você aprova a entrada desta versão em produção?'}
+        config['NotificationArn'] = '!Ref CodePipelineBOSNSTopic'
+
+        pipeline  = NewPipeline()
+        cf_action = pipeline.create_action(name, 1, config, 'Approval')
+        cf = self.gerando_cloudformation(cf_action)
+        print(cf)
+
+        assert 'Approval' == cf['Resources']['Aprovacao']['ActionTypeId']['Category']
+        assert 'Manual' == cf['Resources']['Aprovacao']['ActionTypeId']['Provider']
+        assert 'Aprovacao' in cf['Resources']
+        assert 1 == cf['Resources']['Aprovacao']['RunOrder']
+
     def test_deve_retornar_um_stage(self, params):
         action = params['action']
         stage  = params['stage']

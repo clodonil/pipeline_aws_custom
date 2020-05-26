@@ -64,7 +64,7 @@
                     "EnvironmentVariables": [
                         {
                             "Name": "BranchName",
-                            "Value": "develop"
+                            "Value": "master"
                         },
                         {
                             "Name": "VariablePath",
@@ -96,7 +96,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-aqua-develop",
+                "Name": "pipeline-python-aqua-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "common/container-security/buildspec.yml",
@@ -146,7 +146,7 @@
                     "EnvironmentVariables": [
                         {
                             "Name": "PIPELINETYPE",
-                            "Value": "develop"
+                            "Value": "master"
                         }
                     ],
                     "Image": "aws/codebuild/standard:2.0",
@@ -154,7 +154,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-auditapp-develop",
+                "Name": "pipeline-python-auditapp-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "common/audit/buildspec.yml",
@@ -212,7 +212,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-build-develop",
+                "Name": "pipeline-python-build-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "../01/python/3.7/build/buildspec.yml",
@@ -282,7 +282,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-controlversion-develop",
+                "Name": "pipeline-python-controlversion-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "common/controlversion/buildspec.yml",
@@ -310,7 +310,7 @@
             },
             "Type": "AWS::CodeBuild::Project"
         },
-        "Deployecsdev": {
+        "Deployecshomol": {
             "Properties": {
                 "Artifacts": {
                     "Type": "CODEPIPELINE"
@@ -335,7 +335,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-deployecs-develop",
+                "Name": "pipeline-python-deployecs-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "common/deploy/buildspec_ecs.yml",
@@ -385,7 +385,7 @@
                     "EnvironmentVariables": [
                         {
                             "Name": "BranchName",
-                            "Value": "develop"
+                            "Value": "master"
                         },
                         {
                             "Name": "VariablePath",
@@ -417,7 +417,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-fortify-develop",
+                "Name": "pipeline-python-fortify-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "../01/python/3.7/sast/buildspec.yml",
@@ -479,7 +479,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-parametersapp-develop",
+                "Name": "pipeline-python-parametersapp-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "common/EnvParameters/buildspec.yml",
@@ -507,7 +507,7 @@
             },
             "Type": "AWS::CodeBuild::Project"
         },
-        "PipelinePythonDevelop": {
+        "PipelinePythonMaster": {
             "Properties": {
                 "ArtifactStore": {
                     "EncryptionKey": {
@@ -521,7 +521,7 @@
                     },
                     "Type": "S3"
                 },
-                "Name": "Pipeline-Python-develop",
+                "Name": "Pipeline-Python-master",
                 "RoleArn": "arn:aws:iam::033921349789:role/RoleCodepipelineRole",
                 "Stages": [
                     {
@@ -555,70 +555,13 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "BranchName": "develop",
+                                    "BranchName": "master",
                                     "RepositoryName": "Pipeline-Python"
                                 },
                                 "Name": "Pipeline-Python",
                                 "OutputArtifacts": [
                                     {
                                         "Name": "App"
-                                    }
-                                ],
-                                "RunOrder": "1"
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Source",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeCommit",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "BranchName": "develop",
-                                    "RepositoryName": "Tools"
-                                },
-                                "Name": "Tools",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Tools"
-                                    }
-                                ],
-                                "RunOrder": "1"
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Source",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeCommit",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "BranchName": "develop",
-                                    "RepositoryName": "Tools2"
-                                },
-                                "Name": "Tools2",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Tools2"
-                                    }
-                                ],
-                                "RunOrder": "1"
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Source",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeCommit",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "BranchName": "develop",
-                                    "RepositoryName": "Tools3"
-                                },
-                                "Name": "Tools3",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Tools3"
                                     }
                                 ],
                                 "RunOrder": "1"
@@ -637,7 +580,7 @@
                                 },
                                 "Configuration": {
                                     "PrimarySource": "Libs",
-                                    "ProjectName": "pipeline-python-controlversion-develop"
+                                    "ProjectName": "pipeline-python-controlversion-master"
                                 },
                                 "InputArtifacts": [
                                     {
@@ -663,12 +606,12 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "PrimarySource": "Normalizacao",
-                                    "ProjectName": "pipeline-python-fortify-develop"
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-fortify-master"
                                 },
                                 "InputArtifacts": [
                                     {
-                                        "Name": "Normalizacao"
+                                        "Name": "App"
                                     },
                                     {
                                         "Name": "Libs"
@@ -690,12 +633,12 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "PrimarySource": "Normalizacao",
-                                    "ProjectName": "pipeline-python-sonar-develop"
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-sonar-master"
                                 },
                                 "InputArtifacts": [
                                     {
-                                        "Name": "Normalizacao"
+                                        "Name": "App"
                                     },
                                     {
                                         "Name": "Libs"
@@ -717,12 +660,12 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "PrimarySource": "Normalizacao",
-                                    "ProjectName": "pipeline-python-testunit-develop"
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-testunit-master"
                                 },
                                 "InputArtifacts": [
                                     {
-                                        "Name": "Normalizacao"
+                                        "Name": "App"
                                     },
                                     {
                                         "Name": "Libs"
@@ -744,12 +687,12 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "PrimarySource": "Normalizacao",
-                                    "ProjectName": "pipeline-python-build-develop"
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-build-master"
                                 },
                                 "InputArtifacts": [
                                     {
-                                        "Name": "Normalizacao"
+                                        "Name": "App"
                                     },
                                     {
                                         "Name": "Libs"
@@ -772,7 +715,7 @@
                                 },
                                 "Configuration": {
                                     "PrimarySource": "App",
-                                    "ProjectName": "pipeline-python-aqua-develop"
+                                    "ProjectName": "pipeline-python-aqua-master"
                                 },
                                 "InputArtifacts": [
                                     {
@@ -799,7 +742,7 @@
                                 },
                                 "Configuration": {
                                     "PrimarySource": "Libs",
-                                    "ProjectName": "pipeline-python-auditapp-develop"
+                                    "ProjectName": "pipeline-python-auditapp-master"
                                 },
                                 "InputArtifacts": [
                                     {
@@ -826,7 +769,7 @@
                                 },
                                 "Configuration": {
                                     "PrimarySource": "Libs",
-                                    "ProjectName": "pipeline-python-parametersapp-develop"
+                                    "ProjectName": "pipeline-python-parametersapp-master"
                                 },
                                 "InputArtifacts": [
                                     {
@@ -843,60 +786,6 @@
                                     }
                                 ],
                                 "RunOrder": 3
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Build",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeBuild",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "PrimarySource": "App",
-                                    "ProjectName": "normalizacao"
-                                },
-                                "InputArtifacts": [
-                                    {
-                                        "Name": "App"
-                                    }
-                                ],
-                                "Name": "Normalizacao",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Normalizacao"
-                                    }
-                                ],
-                                "RunOrder": 1
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Build",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeBuild",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "PrimarySource": "Normalizacao",
-                                    "ProjectName": "multantest"
-                                },
-                                "InputArtifacts": [
-                                    {
-                                        "Name": "Normalizacao"
-                                    },
-                                    {
-                                        "Name": "App"
-                                    },
-                                    {
-                                        "Name": "Libs"
-                                    }
-                                ],
-                                "Name": "Multantest",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Multantest"
-                                    }
-                                ],
-                                "RunOrder": 4
                             }
                         ],
                         "Name": "Continuous_Integration"
@@ -911,100 +800,18 @@
                                     "Version": "1"
                                 },
                                 "Configuration": {
-                                    "PrimarySource": "Build",
-                                    "ProjectName": "seguranca1"
-                                },
-                                "InputArtifacts": [
-                                    {
-                                        "Name": "Build"
-                                    }
-                                ],
-                                "Name": "Seguranca1",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Seguranca1"
-                                    }
-                                ],
-                                "RunOrder": 1
-                            },
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Build",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeBuild",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "PrimarySource": "Build",
-                                    "ProjectName": "seguranca2"
-                                },
-                                "InputArtifacts": [
-                                    {
-                                        "Name": "Build"
-                                    }
-                                ],
-                                "Name": "Seguranca2",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Seguranca2"
-                                    }
-                                ],
-                                "RunOrder": 2
-                            }
-                        ],
-                        "Name": "Seguranca"
-                    },
-                    {
-                        "Actions": [
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Build",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeBuild",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "PrimarySource": "Build",
-                                    "ProjectName": "seguranca4"
-                                },
-                                "InputArtifacts": [
-                                    {
-                                        "Name": "Build"
-                                    }
-                                ],
-                                "Name": "Seguranca4",
-                                "OutputArtifacts": [
-                                    {
-                                        "Name": "Seguranca4"
-                                    }
-                                ],
-                                "RunOrder": 2
-                            }
-                        ],
-                        "Name": "Seguranca3"
-                    },
-                    {
-                        "Actions": [
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Build",
-                                    "Owner": "AWS",
-                                    "Provider": "CodeBuild",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
                                     "PrimarySource": "App",
-                                    "ProjectName": "pipeline-python-publishecr-develop"
+                                    "ProjectName": "pipeline-python-publishecr-master"
                                 },
                                 "InputArtifacts": [
                                     {
                                         "Name": "App"
                                     }
                                 ],
-                                "Name": "Publishecrdev",
+                                "Name": "Publishecrhomol",
                                 "OutputArtifacts": [
                                     {
-                                        "Name": "Publishecrdev"
+                                        "Name": "Publishecrhomol"
                                     }
                                 ],
                                 "RunOrder": 1
@@ -1018,29 +825,123 @@
                                 },
                                 "Configuration": {
                                     "PrimarySource": "App",
-                                    "ProjectName": "pipeline-python-deployecs-develop"
+                                    "ProjectName": "pipeline-python-deployecs-master"
                                 },
                                 "InputArtifacts": [
                                     {
                                         "Name": "App"
                                     }
                                 ],
-                                "Name": "Deployecsdev",
+                                "Name": "Deployecshomol",
                                 "OutputArtifacts": [
                                     {
-                                        "Name": "Deployecsdev"
+                                        "Name": "Deployecshomol"
                                     }
                                 ],
                                 "RunOrder": 2
                             }
                         ],
-                        "Name": "DeployDev"
+                        "Name": "DeployHomol"
+                    },
+                    {
+                        "Actions": [],
+                        "Name": "Test"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Approval",
+                                    "Owner": "AWS",
+                                    "Provider": "Manual",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "CustomData": "Voc\u00ea aprova a entrada desta vers\u00e3o em produ\u00e7\u00e3o?",
+                                    "NotificationArn": "!Ref CodePipelinePOSNSTopic"
+                                },
+                                "Name": "Aprovacaopo",
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Approval",
+                                    "Owner": "AWS",
+                                    "Provider": "Manual",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "CustomData": "Voc\u00ea aprova a entrada desta vers\u00e3o em produ\u00e7\u00e3o?",
+                                    "NotificationArn": "!Ref CodePipelinePOSNSTopic"
+                                },
+                                "Name": "Aprovacaobo",
+                                "RunOrder": 1
+                            }
+                        ],
+                        "Name": "Aprovacao"
+                    },
+                    {
+                        "Actions": [],
+                        "Name": "Agendamento"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-publishecr-master"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Publishecrhomol",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Publishecrhomol"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "pipeline-python-deployecs-master"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Deployecshomol",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Deployecshomol"
+                                    }
+                                ],
+                                "RunOrder": 2
+                            }
+                        ],
+                        "Name": "DeployProd"
                     }
                 ]
             },
             "Type": "AWS::CodePipeline::Pipeline"
         },
-        "Publishecrdev": {
+        "Publishecrhomol": {
             "Properties": {
                 "Artifacts": {
                     "Type": "CODEPIPELINE"
@@ -1059,33 +960,16 @@
                 },
                 "Environment": {
                     "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [
-                        {
-                            "Name": "pipeline_environment",
-                            "Value": "develop"
-                        },
-                        {
-                            "Name": "ecr_account",
-                            "Value": "!Ref DevToolsAccount"
-                        },
-                        {
-                            "Name": "microservice_name",
-                            "Value": "Python"
-                        },
-                        {
-                            "Name": "feature_name",
-                            "Value": "Pipeline"
-                        }
-                    ],
+                    "EnvironmentVariables": [],
                     "Image": "aws/codebuild/standard:2.0",
                     "ImagePullCredentialsType": "CODEBUILD",
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-publishecr-develop",
+                "Name": "pipeline-python-publishecr-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
-                    "BuildSpec": "common/Publish/buildspec-to-dev.yml",
+                    "BuildSpec": "common/publish/buildspec_ecr.yml",
                     "Type": "CODEPIPELINE"
                 },
                 "TimeoutInMinutes": 10,
@@ -1113,7 +997,7 @@
         "SG": {
             "Properties": {
                 "GroupDescription": "This security group is used to control access to the container",
-                "GroupName": "Pipeline-Python-develop",
+                "GroupName": "Pipeline-Python-master",
                 "SecurityGroupIngress": [
                     {
                         "CidrIp": "0.0.0.0/0",
@@ -1150,7 +1034,7 @@
                     "EnvironmentVariables": [
                         {
                             "Name": "BranchName",
-                            "Value": "develop"
+                            "Value": "master"
                         },
                         {
                             "Name": "s3bucket",
@@ -1170,7 +1054,7 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-sonar-develop",
+                "Name": "pipeline-python-sonar-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "../01/python/3.7/sonarqube/buildspec.yml",
@@ -1228,290 +1112,10 @@
                     "PrivilegedMode": "true",
                     "Type": "LINUX_CONTAINER"
                 },
-                "Name": "pipeline-python-testunit-develop",
+                "Name": "pipeline-python-testunit-master",
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "../01/python/3.7/testunit/buildspec.yml",
-                    "Type": "CODEPIPELINE"
-                },
-                "TimeoutInMinutes": 10,
-                "VpcConfig": {
-                    "SecurityGroupIds": [
-                        {
-                            "Ref": "SG"
-                        }
-                    ],
-                    "Subnets": [
-                        {
-                            "Ref": "PrivateSubnetOne"
-                        },
-                        {
-                            "Ref": "PrivateSubnetTwo"
-                        }
-                    ],
-                    "VpcId": {
-                        "Ref": "VPCID"
-                    }
-                }
-            },
-            "Type": "AWS::CodeBuild::Project"
-        },
-        "multantest": {
-            "Properties": {
-                "Artifacts": {
-                    "Type": "CODEPIPELINE"
-                },
-                "Cache": {
-                    "Location": {
-                        "Fn::Sub": "${AWS::AccountId}-cache"
-                    },
-                    "Modes": [
-                        "LOCAL_CUSTOM_CACHE"
-                    ],
-                    "Type": "S3"
-                },
-                "EncryptionKey": {
-                    "Ref": "KMSKeyArn"
-                },
-                "Environment": {
-                    "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [],
-                    "Image": "aws/codebuild/standard:2.0",
-                    "ImagePullCredentialsType": "CODEBUILD",
-                    "PrivilegedMode": "true",
-                    "Type": "LINUX_CONTAINER"
-                },
-                "Name": "multantest",
-                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
-                "Source": {
-                    "BuildSpec": "pipeline/buildspec_multantest.yml",
-                    "Type": "CODEPIPELINE"
-                },
-                "TimeoutInMinutes": 10,
-                "VpcConfig": {
-                    "SecurityGroupIds": [
-                        {
-                            "Ref": "SG"
-                        }
-                    ],
-                    "Subnets": [
-                        {
-                            "Ref": "PrivateSubnetOne"
-                        },
-                        {
-                            "Ref": "PrivateSubnetTwo"
-                        }
-                    ],
-                    "VpcId": {
-                        "Ref": "VPCID"
-                    }
-                }
-            },
-            "Type": "AWS::CodeBuild::Project"
-        },
-        "normalizacao": {
-            "Properties": {
-                "Artifacts": {
-                    "Type": "CODEPIPELINE"
-                },
-                "Cache": {
-                    "Location": {
-                        "Fn::Sub": "${AWS::AccountId}-cache"
-                    },
-                    "Modes": [
-                        "LOCAL_CUSTOM_CACHE"
-                    ],
-                    "Type": "S3"
-                },
-                "EncryptionKey": {
-                    "Ref": "KMSKeyArn"
-                },
-                "Environment": {
-                    "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [],
-                    "Image": "aws/codebuild/standard:2.0",
-                    "ImagePullCredentialsType": "CODEBUILD",
-                    "PrivilegedMode": "true",
-                    "Type": "LINUX_CONTAINER"
-                },
-                "Name": "normalizacao",
-                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
-                "Source": {
-                    "BuildSpec": "pipeline/buildspec_normalizacao.yml",
-                    "Type": "CODEPIPELINE"
-                },
-                "TimeoutInMinutes": 10,
-                "VpcConfig": {
-                    "SecurityGroupIds": [
-                        {
-                            "Ref": "SG"
-                        }
-                    ],
-                    "Subnets": [
-                        {
-                            "Ref": "PrivateSubnetOne"
-                        },
-                        {
-                            "Ref": "PrivateSubnetTwo"
-                        }
-                    ],
-                    "VpcId": {
-                        "Ref": "VPCID"
-                    }
-                }
-            },
-            "Type": "AWS::CodeBuild::Project"
-        },
-        "seguranca1": {
-            "Properties": {
-                "Artifacts": {
-                    "Type": "CODEPIPELINE"
-                },
-                "Cache": {
-                    "Location": {
-                        "Fn::Sub": "${AWS::AccountId}-cache"
-                    },
-                    "Modes": [
-                        "LOCAL_CUSTOM_CACHE"
-                    ],
-                    "Type": "S3"
-                },
-                "EncryptionKey": {
-                    "Ref": "KMSKeyArn"
-                },
-                "Environment": {
-                    "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [
-                        {
-                            "Name": "chave",
-                            "Value": "valor"
-                        }
-                    ],
-                    "Image": "linuxcustom",
-                    "ImagePullCredentialsType": "SERVICE_ROLE",
-                    "PrivilegedMode": "true",
-                    "Type": "LINUX_CONTAINER"
-                },
-                "Name": "seguranca1",
-                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
-                "Source": {
-                    "BuildSpec": "pipeline/buildspec_seguranca1.yml",
-                    "Type": "CODEPIPELINE"
-                },
-                "TimeoutInMinutes": 10,
-                "VpcConfig": {
-                    "SecurityGroupIds": [
-                        {
-                            "Ref": "SG"
-                        }
-                    ],
-                    "Subnets": [
-                        {
-                            "Ref": "PrivateSubnetOne"
-                        },
-                        {
-                            "Ref": "PrivateSubnetTwo"
-                        }
-                    ],
-                    "VpcId": {
-                        "Ref": "VPCID"
-                    }
-                }
-            },
-            "Type": "AWS::CodeBuild::Project"
-        },
-        "seguranca2": {
-            "Properties": {
-                "Artifacts": {
-                    "Type": "CODEPIPELINE"
-                },
-                "Cache": {
-                    "Location": {
-                        "Fn::Sub": "${AWS::AccountId}-cache"
-                    },
-                    "Modes": [
-                        "LOCAL_CUSTOM_CACHE"
-                    ],
-                    "Type": "S3"
-                },
-                "EncryptionKey": {
-                    "Ref": "KMSKeyArn"
-                },
-                "Environment": {
-                    "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [
-                        {
-                            "Name": "chave",
-                            "Value": "valor"
-                        }
-                    ],
-                    "Image": "linuxcustom",
-                    "ImagePullCredentialsType": "SERVICE_ROLE",
-                    "PrivilegedMode": "true",
-                    "Type": "LINUX_CONTAINER"
-                },
-                "Name": "seguranca2",
-                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
-                "Source": {
-                    "BuildSpec": "pipeline/buildspec_seguranca2.yml",
-                    "Type": "CODEPIPELINE"
-                },
-                "TimeoutInMinutes": 10,
-                "VpcConfig": {
-                    "SecurityGroupIds": [
-                        {
-                            "Ref": "SG"
-                        }
-                    ],
-                    "Subnets": [
-                        {
-                            "Ref": "PrivateSubnetOne"
-                        },
-                        {
-                            "Ref": "PrivateSubnetTwo"
-                        }
-                    ],
-                    "VpcId": {
-                        "Ref": "VPCID"
-                    }
-                }
-            },
-            "Type": "AWS::CodeBuild::Project"
-        },
-        "seguranca4": {
-            "Properties": {
-                "Artifacts": {
-                    "Type": "CODEPIPELINE"
-                },
-                "Cache": {
-                    "Location": {
-                        "Fn::Sub": "${AWS::AccountId}-cache"
-                    },
-                    "Modes": [
-                        "LOCAL_CUSTOM_CACHE"
-                    ],
-                    "Type": "S3"
-                },
-                "EncryptionKey": {
-                    "Ref": "KMSKeyArn"
-                },
-                "Environment": {
-                    "ComputeType": "BUILD_GENERAL1_SMALL",
-                    "EnvironmentVariables": [
-                        {
-                            "Name": "chave",
-                            "Value": "valor"
-                        }
-                    ],
-                    "Image": "linuxcustom",
-                    "ImagePullCredentialsType": "SERVICE_ROLE",
-                    "PrivilegedMode": "true",
-                    "Type": "LINUX_CONTAINER"
-                },
-                "Name": "seguranca4",
-                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
-                "Source": {
-                    "BuildSpec": "pipeline/buildspec_seguranca4.yml",
                     "Type": "CODEPIPELINE"
                 },
                 "TimeoutInMinutes": 10,

@@ -1,6 +1,7 @@
 """
 Tools para validar o arquivo template recebido do SQS
 """
+
 import yaml
 
 class Validate:

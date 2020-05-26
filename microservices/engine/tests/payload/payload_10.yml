@@ -1,0 +1,20 @@
+---
+version: 1
+template: app-ecs
+runtime: python:3.7
+provider: aws
+Parameter:
+    - Projeto: Pipeline-Python
+pipeline:
+    develop:
+        - Source
+        - Continuous_Integration
+        - Aprovacao
+        - DeployDev
+    master:
+        - Source
+        - Continuous_Integration
+        - DeployHomol
+callback:
+    protocolo: email
+    endpoint: clodonil@nisled.org

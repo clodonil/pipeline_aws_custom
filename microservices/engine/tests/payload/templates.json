@@ -1,6 +1,7 @@
 {
 	"name": "app-ecs",
 	"details": {
+    "pipeline":{
 			"1-Source": [],
 			"2-Continuous_Integration": [
 				{
@@ -103,7 +104,85 @@
 					"runorder": "2"
 				}
 			}
-			]
-
-		}
+      ],
+			"5-Test": [
+				{
+				"Performance": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "1"
+				}
+			},
+				{
+				"Integracao": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "2"
+				}
+			}
+      ],
+      "6-Aprovacao": [
+				{
+				 "AprovacaoPO" : {
+            		 "CustomData" : "Você aprova a entrada desta versão em produção?",
+					 "NotificationArn" : "!Ref CodePipelinePOSNSTopic",
+					 "runorder": "1"
+				 }
+				},
+				{
+					"AprovacaoBO": {
+						"CustomData": "Você aprova a entrada desta versão em produção?",
+						"NotificationArn": "!Ref CodePipelinePOSNSTopic",
+     					"runorder": "1"
+					}
+				}
+			],
+			"7-Agendamento": [
+				{
+				"Agendamento1": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "1"
+				}
+			},
+				{
+				"Agendamento2": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "2"
+				}
+			}
+      ],
+			"8-DeployProd": [
+				{
+				"Publishecrhomol": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "1"
+				}
+			},
+				{
+				"Deployecshomol": {
+					"ProjectName": "proj",
+					"PrimarySource": "App",
+					"InputArtifacts": "App",
+					"runorder": "2"
+				}
+			}
+      ]
+    },
+    "dependencias" : {
+      "develop" : ["SG","ECR"],
+      "master"  : ["SG","ECR", "SNS"]
+    },
+    "estrutura" : {
+      "develop": ["DeployHomol", "DeployProd","Aprovacao","Test","Agendamento"],
+      "master": ["DeployDev"]
+    }
+  }
 }
