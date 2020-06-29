@@ -13,12 +13,13 @@ pipeline:
             - RepositoryName: Tools
         - Continuous_Integration::custom:
             - testmultant:
+                - type: codebuild
                 - source: Build
                 - environment:
                     - Name : chave
                     - Value: valor
                 - imagecustom: linuxcustom
-                - runorder: 4
+                - runorder: 4                
         - DeployDev
 callback:
     protocolo: email

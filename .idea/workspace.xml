@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="86794834-6b32-4d2c-90a4-f13034c3ad32" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/microservices/engine/templates/depends/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/microservices/engine/templates/depends/resources.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/microservices/engine/tests/test_resources.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/swap/Pipeline-Python-develop-000000.json" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/swap/Pipeline-Python-develop-000000.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/swap/Pipeline-Python-master-000000.json" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/swap/Pipeline-Python-master-000000.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/templates/pipeline_template.py" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/templates/pipeline_template.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/tests/payload/templates.json" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/tests/payload/templates.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/tests/test_codebuild.py" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/tests/test_codebuild.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/engine/tests/test_template.py" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/engine/tests/test_template.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/tools/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/microservices/tools/log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservices/tools/wasabi_log.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1cNFtidfB4ZYQPYENeBsE1LYPTf" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="86794834-6b32-4d2c-90a4-f13034c3ad32" name="Default Changelist" comment="" />
+      <created>1590361360461</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1590361360461</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="408" y="233" width="540" height="303" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1590361429829">
+      <screen x="0" y="27" width="1366" height="708" />
+    </state>
+    <state x="408" y="233" width="540" height="303" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/0.27.1366.708@0.27.1366.708" timestamp="1590361429829" />
+  </component>
+</project>

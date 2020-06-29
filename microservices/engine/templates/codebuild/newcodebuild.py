@@ -106,7 +106,6 @@ class NewCodeBuild:
             image = False
         return image
 
-    @WasabiLog
     def Controlversion(self, **params):
         # TODO: PIPELINETYPE requerer uma variável App
 
@@ -129,13 +128,14 @@ class NewCodeBuild:
             }
         ]
         title = 'Controlversion'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Controlversion-{params['branchname']}"
         buildspec = "common/controlversion/buildspec.yml"
-        controlversion = self.create_codebuild('Controlversion', name.lower(), env, image, buildspec)
+        controlversion = self.create_codebuild(
+            'Controlversion', name.lower(), env, image, buildspec)
         return controlversion
 
-    @WasabiLog
     def Fortify(self, **params):
         env = [
             {
@@ -169,14 +169,15 @@ class NewCodeBuild:
             }
         ]
         title = 'Fortify'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Fortify-{params['branchname']}"
         runtime_path = '/'.join(params['runtime'].split(':'))
         buildspec = f"../01/{runtime_path}/sast/buildspec.yml"
-        sast = self.create_codebuild(title, name.lower(), env, image, buildspec)
+        sast = self.create_codebuild(
+            title, name.lower(), env, image, buildspec)
         return sast
 
-    @WasabiLog
     def Sonar(self, **params):
         env = [
             {
@@ -197,14 +198,15 @@ class NewCodeBuild:
             }
         ]
         title = 'Sonar'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Sonar-{params['branchname']}"
         runtime_path = '/'.join(params['runtime'].split(':'))
         buildspec = f"../01/{runtime_path}/sonarqube/buildspec.yml"
-        sonar = self.create_codebuild(title, name.lower(), env, image, buildspec)
+        sonar = self.create_codebuild(
+            title, name.lower(), env, image, buildspec)
         return sonar
 
-    @WasabiLog
     def Testunit(self, **params):
         env = [
             {
@@ -219,12 +221,13 @@ class NewCodeBuild:
             buildspec = f"../01/{runtime_path}/testunit/buildspec.yml"
 
         title = 'Testunit'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Testunit-{params['branchname']}"
-        testunit = self.create_codebuild(title, name.lower(), env, image, buildspec)
+        testunit = self.create_codebuild(
+            title, name.lower(), env, image, buildspec)
         return testunit
 
-    @WasabiLog
     def Build(self, **params):
         env = [
             {
@@ -239,12 +242,13 @@ class NewCodeBuild:
             buildspec = f"../01/{runtime_path}/build/buildspec.yml"
 
         title = 'Build'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Build-{params['branchname']}"
-        build = self.create_codebuild(title, name.lower(), env, image, buildspec)
+        build = self.create_codebuild(
+            title, name.lower(), env, image, buildspec)
         return build
 
-    @WasabiLog
     def Aqua(self, **params):
         env = [
             {
@@ -278,12 +282,13 @@ class NewCodeBuild:
             }
         ]
         title = 'Aqua'
-        image = self.ImageCustom(title, params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Aqua-{params['branchname']}"
-        aqua = self.create_codebuild(title, name.lower(), env, image, 'common/container-security/buildspec.yml')
+        aqua = self.create_codebuild(
+            title, name.lower(), env, image, 'common/container-security/buildspec.yml')
         return aqua
 
-    @WasabiLog
     def Publishecrdev(self, **params):
         env = [
             {
@@ -306,39 +311,63 @@ class NewCodeBuild:
         ]
 
         title = 'Publishecrdev'
-        image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
-        name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(title, name.lower(), env, image, 'common/Publish/buildspec-to-dev.yml')
+        image = self.ImageCustom(
+            'PublishECR', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        ecr = self.create_codebuild(
+            title, name.lower(), env, image, 'common/Publish/buildspec-to-dev.yml')
         return ecr
 
-    @WasabiLog
     def Deployecsdev(self, **params):
         env = []
         title = 'Deployecsdev'
-        image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
-        name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
+        image = self.ImageCustom(
+            'DeployECS', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        deploy_ecs = self.create_codebuild(
+            title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
         return deploy_ecs
 
-    @WasabiLog
     def Publishecrhomol(self, **params):
         env = []
         title = 'Publishecrhomol'
-        image = self.ImageCustom('PublishECR', params['imageCustom'], params['runtime'])
-        name = f"{params['featurename']}-{params['microservicename']}-PublishECR-{params['branchname']}"
-        ecr = self.create_codebuild(title, name.lower(), env, image, 'common/publish/buildspec_ecr.yml')
+        image = self.ImageCustom(
+            'PublishECR', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        ecr = self.create_codebuild(
+            title, name.lower(), env, image, 'common/publish/buildspec_ecr.yml')
         return ecr
 
-    @WasabiLog
+    def Publishecrprod(self, **params):
+        env = []
+        title = 'Publishecrprod'
+        image = self.ImageCustom(
+            'PublishECR', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        ecr = self.create_codebuild(
+            title, name.lower(), env, image, 'common/publish/buildspec_ecr.yml')
+        return ecr
+
     def Deployecshomol(self, **params):
         env = []
         title = 'Deployecshomol'
-        image = self.ImageCustom('DeployECS', params['imageCustom'], params['runtime'])
-        name = f"{params['featurename']}-{params['microservicename']}-DeployECS-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
+        image = self.ImageCustom(
+            'DeployECS', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        deploy_ecs = self.create_codebuild(
+            title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
         return deploy_ecs
 
-    @WasabiLog
+    def Deployecsprod(self, **params):
+        env = []
+        title = 'Deployecsprod'
+        image = self.ImageCustom(
+            'DeployECS', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        deploy_ecs = self.create_codebuild(
+            title, name.lower(), env, image, 'common/deploy/buildspec_ecs.yml')
+        return deploy_ecs
+
     def Parametersapp(self, **params):
         env = [
             {
@@ -352,12 +381,13 @@ class NewCodeBuild:
         ]
 
         title = 'ParametersApp'
-        image = self.ImageCustom('Parametersapp', params['imageCustom'], params['runtime'])
-        name = f"{params['featurename']}-{params['microservicename']}-Parametersapp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/EnvParameters/buildspec.yml')
+        image = self.ImageCustom(
+            'Parametersapp', params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        deploy_ecs = self.create_codebuild(
+            title, name.lower(), env, image, 'common/EnvParameters/buildspec.yml')
         return deploy_ecs
 
-    @WasabiLog
     def Auditapp(self, **params):
         # Todo: PIPELINETYPE requerer uma variável com o nome APP
         env = [
@@ -369,7 +399,45 @@ class NewCodeBuild:
         ]
 
         title = 'AuditApp'
-        image = self.ImageCustom('Auditapp', params['imageCustom'], params['runtime'])
+        image = self.ImageCustom(
+            'Auditapp', params['imageCustom'], params['runtime'])
         name = f"{params['featurename']}-{params['microservicename']}-Auditapp-{params['branchname']}"
-        deploy_ecs = self.create_codebuild(title, name.lower(), env, image, 'common/audit/buildspec.yml')
+        deploy_ecs = self.create_codebuild(
+            title, name.lower(), env, image, 'common/audit/buildspec.yml')
         return deploy_ecs
+
+    def Performance(self, **params):
+        # Todo: PIPELINETYPE requerer uma variável com o nome APP
+        env = [
+            {
+                'Name': 'PIPELINETYPE',
+                'Value': params['branchname']
+
+            }
+        ]
+
+        title = 'Performance'
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        codebuild = self.create_codebuild(
+            title, name.lower(), env, image, 'common/performance/buildspec.yml')
+        return codebuild
+
+    def Integracao(self, **params):
+        # Todo: PIPELINETYPE requerer uma variável com o nome APP
+        env = [
+            {
+                'Name': 'PIPELINETYPE',
+                'Value': params['branchname']
+
+            }
+        ]
+
+        title = 'Integracao'
+        image = self.ImageCustom(
+            title, params['imageCustom'], params['runtime'])
+        name = f"{params['featurename']}-{params['microservicename']}-{title}-{params['branchname']}"
+        codebuild = self.create_codebuild(
+            title, name.lower(), env, image, 'common/integracao/buildspec.yml')
+        return codebuild

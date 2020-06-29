@@ -10,27 +10,34 @@ pipeline:
         - Source
         - Continuous_Integration::Custom:
             - testmultant:
+                  - type: codebuild
                   - source: Build
                   - runorder: 4
             - normalizacao:
+                - type: codebuild
                 - source:
                     - app
                     - app2
                     - app3
                 - runorder: 1
             - Build:
+                - type: codebuild
                 - source: normalizacao
             - Testunit:
+                - type: codebuild
                 - source: normalizacao
             - Sonar:
+                 - type: codebuild
                  - source: normalizacao
 
         - Custom::DAST:
             - teste1:
+                - type: codebuild
                 - source: Build
                 - environment:
                 - runorder: 1
             - teste2:
+                - type: codebuild
                 - source: Teste1
                 - environment:
                     - Name : URL

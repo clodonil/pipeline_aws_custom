@@ -7,6 +7,7 @@ from tools.dynamodb import get_dy_template, get_sharedlibrary_release, get_image
 from daemonize import Daemonize
 import json
 import time
+import sys
 from tools.log import logger, WasabiLog
 
 pid = "/tmp/engine.pid"
@@ -18,7 +19,8 @@ def setParams(payload, env):
     dynamodb_template = get_dy_template(template)
     logger.info(f"Dados_Dynamodb: {dynamodb_template}")
     pipeline_stages = dynamodb_template.get('pipeline')
-    estrutura = dynamodb_template.get('estrutura')
+    estrutura = dynamodb_template.get('structure')
+    dependencias = dynamodb_template.get('depends')
     release = get_sharedlibrary_release()
     imageCustom = get_imageCustom()
     params = {}
@@ -34,7 +36,8 @@ def setParams(payload, env):
         'release': release,
         'imageCustom': imageCustom,
         'type': template,
-        'estrutura': estrutura
+        'structure': estrutura,
+        'depends': dependencias
     }
     logger.info(f'Params: {template_params}')
     return template_params
@@ -53,33 +56,40 @@ def save_s3_send_sqs(template_params, requestID, file_template, event):
             "pipelinename": template_params['params']['Projeto'],
             "requestID": requestID
         }
-        logger.info(f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
+        logger.info(
+            f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
         logger.info(f"Mensagem: {msg}")
         sqs_send(filas['deploy'], msg)
-        logger.info(f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
+        logger.info(
+            f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
         sqs_delete(event)
 
 
 def main():
     while True:
-        try:
-            for event in sqs_receive(filas['processing']):
-                payload = json.loads(event.body)
-                requestID = payload['requestID']
-                logger.info(f'Event: {event.body}')
+        #        try:
+        for event in sqs_receive(filas['processing']):
+            payload = json.loads(event.body)
+            requestID = payload['requestID']
+            logger.info(f'Event: {event.body}')
 
-                # Template Base
-                codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
-                codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
-                template_params = setParams(payload, 'develop')
-                pipeline = NewTemplate(codepipeline_roles, codebuild_role, DevSecOps_Role)
+            # Template Base
+            codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
+            codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
+            for envs in payload['payload']['pipeline'].keys():
+                template_params = setParams(payload, envs)
+                pipeline = NewTemplate(
+                    codepipeline_roles, codebuild_role, DevSecOps_Role)
                 file_template = pipeline.generate(tp=template_params)
                 logger.info(f'File Template: {file_template}')
-                save_s3_send_sqs(template_params, requestID, file_template, event)
+                save_s3_send_sqs(template_params, requestID,
+                                 file_template, event)
 
-        except Exception as error:
-            logger.warning(f'Error: {error}, Event: {requestID}')
-        time.sleep(polling_time)
+ #       except Exception as error:
+ #           logger.warning(f'Error: {error}, Event: {requestID}')
+ #       time.sleep(polling_time)
 
-daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
-daemon.start()
+
+#daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
+# daemon.start()
+main()

@@ -1,0 +1,70 @@
+---
+version: 1
+template: app-ecs
+runtime: python:3.7
+provider: aws
+Parameter:
+    - Projeto: Pipeline-Python
+pipeline:
+    develop:
+        - Source
+        - Source::custom:
+            - RepositoryName: Tools
+        - Source::custom:
+            - RepositoryName: Tools2
+        - Source::custom:
+            - RepositoryName: Tools3
+        - Continuous_Integration::custom:
+            - normalizacao:
+                - type: codebuild
+                - source: App
+                - runorder: 1
+            - Build:
+                - type: codebuild
+                - source: normalizacao
+            - Testunit:
+                - type: codebuild
+                - source: normalizacao
+            - Sonar:
+                - type: codebuild
+                - source: normalizacao
+            - Fortify:
+                - type: codebuild
+                - source: normalizacao
+            - multantest:
+                - type: codebuild
+                - source:
+                    - normalizacao
+                    - app
+                    - libs
+                - runorder: 4
+        - custom::Seguranca:
+            - seguranca1:
+                - type: codebuild
+                - source: Build
+                - environment:
+                    - Name : chave
+                    - Value: valor
+                - imagecustom: linuxcustom
+                - runorder: 1
+            - seguranca2:
+                - type: codebuild
+                - source: Build
+                - environment:
+                    - Name : chave
+                    - Value: valor
+                - imagecustom: linuxcustom
+                - runorder: 2
+        - Custom::Seguranca3:
+            - seguranca4:
+                - type: codebuild
+                - source: Build
+                - environment:
+                    - Name : chave
+                    - Value: valor
+                - imagecustom: linuxcustom
+                - runorder: 2
+        - DeployDev
+callback:
+    protocolo: email
+    endpoint: clodonil@nisled.org

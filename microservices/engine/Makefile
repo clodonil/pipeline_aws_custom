@@ -27,7 +27,7 @@ coverage:
 	pytest --cov-report xml --cov=.
 
 test:
-	pytest --verbose --color=yes
+	pytest --verbose --color=yes -x
 	coverage run --source=. -m pytest
 	coverage report -m
 

@@ -10,6 +10,7 @@ pipeline:
         - Source
         - Continuous_Integration::custom:
             - testmultant:
+                - type: codebuild
                 - source: App
                 - environment:
                     - Name : chave
@@ -17,16 +18,19 @@ pipeline:
                 - runorder: 4
         - custom::Seguranca:
             - seguranca1:
+                - type: codebuild
                 - source: Build
                 - environment:
                 - runorder: 1
         - DeployDev
         - custom::DAST:
             - teste1:
+                - type: codebuild
                 - source: Build
                 - environment:
                 - runorder: 1
             - teste2:
+                - type: codebuild
                 - source: Teste1
                 - environment:
                     - Name : URL

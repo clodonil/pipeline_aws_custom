@@ -8,8 +8,49 @@ Parameter:
 pipeline:
     develop:
         - Source
-        - Continuous_Integration
+        - Continuous_Integration::Custom:
+            - testmultant:
+                  - type: codebuild
+                  - source: Build
+                  - runorder: 4
+            - normalizacao:
+                - type: codebuild
+                - source:
+                    - app
+                - runorder: 1
+            - Build:
+                - type: codebuild
+                - source: normalizacao
+            - Testunit:
+                - type: codebuild
+                - source: normalizacao
+            - Sonar:
+                 - type: codebuild
+                 - source: normalizacao
         - DeployDev
+        - Custom::DAST:
+            - teste1:
+                - type: codebuild
+                - source: Build
+                - environment:
+                - runorder: 1
+            - teste2:
+                - type: codebuild
+                - source: Teste1
+                - environment:
+                    - Name : URL
+                    - Value: www.globo.com
+                - imagecustom: linuxcustom
+                - runorder: 2
+
+    master:
+        - Source
+        - Continuous_Integration
+        - DeployHomol
+        - Test
+        - Aprovacao
+        - Agendamento
+        - DeployProd
 callback:
     protocolo: email
     endpoint: clodonil@nisled.org

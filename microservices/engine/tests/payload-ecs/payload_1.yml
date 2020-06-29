@@ -14,6 +14,8 @@ pipeline:
         - Source
         - Continuous_Integration
         - DeployHomol
+        - Aprovacao
+        - Agendamento
 callback:
     protocolo: email
     endpoint: clodonil@nisled.org

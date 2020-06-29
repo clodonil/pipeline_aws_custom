@@ -6,6 +6,7 @@
 			"2-Continuous_Integration": [
 				{
 					"Controlversion": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -14,6 +15,7 @@
 				},
 				{
 					"Fortify": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -22,6 +24,7 @@
 				},
 				{
 					"Sonar": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -30,6 +33,7 @@
 				},
 				{
 					"Testunit": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -38,6 +42,7 @@
 				},
 				{
 					"Build": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -46,6 +51,7 @@
 				},
 				{
 					"Aqua": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "App",
 						"ProjectName": "proj",
@@ -54,6 +60,7 @@
 				},
 				{
 					"Auditapp": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -62,6 +69,7 @@
 				},
 				{
 					"Parametersapp": {
+						"type" : "CodeBuild",
 						"InputArtifacts": ["App", "Libs"],
 						"PrimarySource": "Libs",
 						"ProjectName": "proj",
@@ -72,6 +80,7 @@
 			"3-DeployDev": [
 				{
 				"Publishecrdev": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -80,6 +89,7 @@
 			},
 				{
 				"Deployecsdev": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -90,6 +100,7 @@
 			"4-DeployHomol": [
 				{
 				"Publishecrhomol": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -98,6 +109,7 @@
 			},
 				{
 				"Deployecshomol": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -108,6 +120,7 @@
 			"5-Test": [
 				{
 				"Performance": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -116,6 +129,7 @@
 			},
 				{
 				"Integracao": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -126,15 +140,15 @@
       "6-Aprovacao": [
 				{
 				 "AprovacaoPO" : {
-            		 "CustomData" : "Você aprova a entrada desta versão em produção?",
-					 "NotificationArn" : "!Ref CodePipelinePOSNSTopic",
+                     "type": "Approval",
+            		 "CustomData" : "Você aprova a entrada desta versão em produção?",					 
 					 "runorder": "1"
 				 }
 				},
 				{
 					"AprovacaoBO": {
+						"type": "Approval",
 						"CustomData": "Você aprova a entrada desta versão em produção?",
-						"NotificationArn": "!Ref CodePipelinePOSNSTopic",
      					"runorder": "1"
 					}
 				}
@@ -142,24 +156,29 @@
 			"7-Agendamento": [
 				{
 				"Agendamento1": {
-					"ProjectName": "proj",
-					"PrimarySource": "App",
-					"InputArtifacts": "App",
+					"type" : "InvokeLambda",
+					"FunctionName": "Agendamento1",
+					"UserParameters": "paramerters",
+					"InputArtifacts": [],
+					"RoleArn": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
 					"runorder": "1"
 				}
 			},
 				{
 				"Agendamento2": {
-					"ProjectName": "proj",
-					"PrimarySource": "App",
-					"InputArtifacts": "App",
+					"type" : "InvokeLambda",
+					"FunctionName": "Agendamento2",
+					"UserParameters": "paramerters",
+					"InputArtifacts": [],
+					"RoleArn": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
 					"runorder": "2"
 				}
 			}
       ],
 			"8-DeployProd": [
 				{
-				"Publishecrhomol": {
+				"Publishecrprod": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -167,7 +186,8 @@
 				}
 			},
 				{
-				"Deployecshomol": {
+				"Deployecsprod": {
+					"type" : "CodeBuild",
 					"ProjectName": "proj",
 					"PrimarySource": "App",
 					"InputArtifacts": "App",
@@ -176,11 +196,11 @@
 			}
       ]
     },
-    "dependencias" : {
-      "develop" : ["SG","ECR"],
-      "master"  : ["SG","ECR", "SNS"]
+    "depends" : {
+      "develop" : ["SGDevelop","ECRDevelop"],
+      "master"  : ["SGMaster","ECRMaster","ECRHomolog", "SNS"]
     },
-    "estrutura" : {
+    "structure" : {
       "develop": ["DeployHomol", "DeployProd","Aprovacao","Test","Agendamento"],
       "master": ["DeployDev"]
     }

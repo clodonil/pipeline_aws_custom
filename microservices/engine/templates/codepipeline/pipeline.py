@@ -13,7 +13,7 @@ class NewPipeline:
         config = configuration.copy()
         ListInputArtifacts = []
         action = None
-        if type == 'Build':
+        if type == 'CodeBuild':
             provider = 'CodeBuild'
             category = 'Build'
 
@@ -90,8 +90,24 @@ class NewPipeline:
                 Configuration=config,
                 RunOrder=runorder
             )
-
-        #                  CustomData: 'Você aprova a entrada desta versão em produção?'
+        elif type == 'InvokeLambda':
+            inputartifact = config.pop('InputArtifacts')
+            rolearn = config.pop('RoleArn')
+            typeId = ActionTypeId(
+                Category='Invoke',
+                Owner='AWS',
+                Provider='Lambda',
+                Version='1',
+            )
+            action = Actions(
+                project_name,
+                Name=name,
+                ActionTypeId=typeId,
+                Configuration=config,
+                InputArtifacts=inputartifact,
+                RoleArn=rolearn,
+                RunOrder=runorder
+            )
 
         return action
 

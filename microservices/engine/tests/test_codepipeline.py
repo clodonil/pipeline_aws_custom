@@ -7,7 +7,7 @@ import json
 class TestCodePipeline:
     @pytest.fixture
     def params(self):
-        actions= {
+        actions = {
             'source':
                 {
                     'name': 'source',
@@ -20,17 +20,17 @@ class TestCodePipeline:
                 {
                     'name': 'compilar',
                     'runorder': 1,
-                    'configuration': {'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': 'App', 'runorder': '1'},
-                    'type': 'Build',
+                    'configuration': {'ProjectName': 'proj', 'PrimarySource': 'App', 'InputArtifacts': 'App', 'runorder': '1'},
+                    'type': 'CodeBuild',
                     'role': 'arn:aws:iam::033921349789:role/RoleCodepipelineRole'
                 },
             'stage':
                 {
-                    'name' : 'Compilador'
+                    'name': 'Compilador'
                 },
             'pipeline':
                 {
-                    'name' : 'PipelineEcs',
+                    'name': 'PipelineEcs',
                     'role': 'arn:aws:iam::033921349789:role/RoleCodepipelineRole'
                 }
         }
@@ -44,21 +44,25 @@ class TestCodePipeline:
 
     def test_deve_retornar_um_Action_tipo_source(self, params):
         action = params['source']
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
-        assert 'Source' == cf['Resources'][action['name']]['ActionTypeId']['Category']
-        assert 'CodeCommit' == cf['Resources'][action['name']]['ActionTypeId']['Provider']
+        assert 'Source' == cf['Resources'][action['name']
+                                           ]['ActionTypeId']['Category']
+        assert 'CodeCommit' == cf['Resources'][action['name']
+                                               ]['ActionTypeId']['Provider']
         assert 'source' in cf['Resources']
         assert 1 == cf['Resources']['source']['RunOrder']
 
     def test_deve_retornar_um_Action_tipo_source_Nome_Alphanumerico(self, params):
         action = params['source']
         name = 'Source-App'
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(name, action['runorder'], action['configuration'], action['type'], action['role'])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            name, action['runorder'], action['configuration'], action['type'], action['role'])
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
@@ -71,8 +75,9 @@ class TestCodePipeline:
     def test_deve_retornar_um_Action_tipo_source_Sem_Role(self, params):
         action = params['source']
         name = 'Source-App'
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(name, action['runorder'], action['configuration'], action['type'], role='')
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            name, action['runorder'], action['configuration'], action['type'], role='')
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
@@ -83,8 +88,9 @@ class TestCodePipeline:
 
     def test_deve_retornar_um_Action_tipo_Build(self, params):
         action = params['action']
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
@@ -95,9 +101,11 @@ class TestCodePipeline:
 
     def test_deve_retornar_um_Action_tipo_Build_Multiplos_Sources(self, params):
         action = params['action']
-        configuration = {'ProjectName' : 'proj','PrimarySource' : 'App', 'InputArtifacts': ['App','App2'], 'runorder': '1'}
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(action['name'], action['runorder'], configuration, action['type'], action['role'])
+        configuration = {'ProjectName': 'proj', 'PrimarySource': 'App',
+                         'InputArtifacts': ['App', 'App2'], 'runorder': '1'}
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            action['name'], action['runorder'], configuration, action['type'], action['role'])
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
@@ -105,14 +113,17 @@ class TestCodePipeline:
         assert 'CodeBuild' == cf['Resources']['compilar']['ActionTypeId']['Provider']
         assert 'compilar' in cf['Resources']
         assert 1 == cf['Resources']['compilar']['RunOrder']
-        assert 'App' in [input['Name'] for input in cf['Resources']['compilar']['InputArtifacts']]
-        assert 'App2' in [input['Name'] for input in cf['Resources']['compilar']['InputArtifacts']]
+        assert 'App' in [input['Name']
+                         for input in cf['Resources']['compilar']['InputArtifacts']]
+        assert 'App2' in [input['Name']
+                          for input in cf['Resources']['compilar']['InputArtifacts']]
 
     def test_deve_retornar_um_Action_tipo_Build_Nome_Alphanumerico(self, params):
         action = params['action']
         name = 'Build-App'
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(name, action['runorder'], action['configuration'], action['type'], action['role'])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            name, action['runorder'], action['configuration'], action['type'], action['role'])
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
 
@@ -124,10 +135,10 @@ class TestCodePipeline:
     def test_deve_retornar_um_Action_tipo_aprovacao(self, params):
         #        action = params['action']
         name = 'Aprovacao'
-        config = {'CustomData' : 'Você aprova a entrada desta versão em produção?'}
+        config = {'CustomData': 'Você aprova a entrada desta versão em produção?'}
         config['NotificationArn'] = '!Ref CodePipelineBOSNSTopic'
 
-        pipeline  = NewPipeline()
+        pipeline = NewPipeline()
         cf_action = pipeline.create_action(name, 1, config, 'Approval')
         cf = self.gerando_cloudformation(cf_action)
         print(cf)
@@ -139,11 +150,12 @@ class TestCodePipeline:
 
     def test_deve_retornar_um_stage(self, params):
         action = params['action']
-        stage  = params['stage']
+        stage = params['stage']
 
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
-        cf_stage  = pipeline.create_stage(stage['name'], [cf_action])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
+        cf_stage = pipeline.create_stage(stage['name'], [cf_action])
         cf = self.gerando_cloudformation(cf_stage)
         print(cf)
 
@@ -154,9 +166,10 @@ class TestCodePipeline:
         action = params['action']
         name = 'Stage-Compilacao'
 
-        pipeline  = NewPipeline()
-        cf_action = pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
-        cf_stage  = pipeline.create_stage(name, [cf_action])
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(
+            action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
+        cf_stage = pipeline.create_stage(name, [cf_action])
         cf = self.gerando_cloudformation(cf_stage)
         print(cf)
         assert 'StageCompilacao' in cf['Resources']
@@ -164,12 +177,36 @@ class TestCodePipeline:
 
     def test_deve_retornar_uma_pipeline(self, params):
         action = params['action']
-        stage  = params['stage']
+        stage = params['stage']
         pipeline = params['pipeline']
-        obj_pipeline  = NewPipeline()
-        cf_action = obj_pipeline.create_action(action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
-        cf_stage  = obj_pipeline.create_stage(stage['name'], [cf_action])
-        cf_pipeline = obj_pipeline.create_pipeline(pipeline['name'], pipeline['role'], [cf_stage])
+        obj_pipeline = NewPipeline()
+        cf_action = obj_pipeline.create_action(
+            action['name'], action['runorder'], action['configuration'], action['type'], action['role'])
+        cf_stage = obj_pipeline.create_stage(stage['name'], [cf_action])
+        cf_pipeline = obj_pipeline.create_pipeline(
+            pipeline['name'], pipeline['role'], [cf_stage])
         cf = self.gerando_cloudformation(cf_pipeline)
         print(cf)
         assert 'Pipelineecs' in cf['Resources']
+
+    def test_deve_retornar_um_Action_tipo_InvokeLambda(self, params):
+        #        action = params['action']
+        name = 'InvokeLambda'
+        config = {
+            "type": "InvokeLambda",
+            "FunctionName": "Agendamento2",
+            "UserParameters": "paramerters",
+            "InputArtifacts": [],
+            "RoleArn": "arn:aws:iam::123456780:role/role",
+            "runorder": "1"
+        }
+
+        pipeline = NewPipeline()
+        cf_action = pipeline.create_action(name, 1, config, 'InvokeLambda')
+        cf = self.gerando_cloudformation(cf_action)
+        print(cf)
+
+        assert 'Invoke' == cf['Resources']['InvokeLambda']['ActionTypeId']['Category']
+        assert 'Lambda' == cf['Resources']['InvokeLambda']['ActionTypeId']['Provider']
+        assert 'InvokeLambda' in cf['Resources']
+        assert 1 == cf['Resources']['InvokeLambda']['RunOrder']

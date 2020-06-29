@@ -8,32 +8,10 @@ Parameter:
 pipeline:
     develop:
         - Source
-        - Source::custom:
-            - RepositoryName: Tools
-        - Source::custom:
-            - RepositoryName: Tools2
-        - Source::custom:
-            - RepositoryName: Tools3
-        - Continuous_Integration::custom:
-            - normalizacao:
-                - source: App
-                - runorder: 1
-            - Build:
-                - source: normalizacao
-            - Testunit:
-                - source: normalizacao
-            - Sonar:
-                - source: normalizacao
-            - Fortify:
-                - source: normalizacao
-            - multantest:
-                - source:
-                    - normalizacao
-                    - app
-                    - libs
-                - runorder: 4
+        - Continuous_Integration
         - custom::Seguranca:
             - seguranca1:
+                - type: codebuild
                 - source: Build
                 - environment:
                     - Name : chave
@@ -41,20 +19,23 @@ pipeline:
                 - imagecustom: linuxcustom
                 - runorder: 1
             - seguranca2:
+                - type: codebuild
                 - source: Build
                 - environment:
                     - Name : chave
                     - Value: valor
                 - imagecustom: linuxcustom
                 - runorder: 2
-        - Custom::Seguranca3:
+
+        - custom::Seguranca3:
             - seguranca4:
+                - type: codebuild
                 - source: Build
                 - environment:
                     - Name : chave
                     - Value: valor
                 - imagecustom: linuxcustom
-                - runorder: 2
+                - runorder: 1
         - DeployDev
 callback:
     protocolo: email

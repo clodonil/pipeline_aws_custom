@@ -22,7 +22,7 @@ def main():
            sqs_delete(event)
     #except:
     #    print("erro no deploy")
-      time.sleep(polling_time)
+      time.sleep(1)
 
 #daemon = Daemonize(app="deploy", pid=pid, action=main, foreground=True)
 #daemon.start()
