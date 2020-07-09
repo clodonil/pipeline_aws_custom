@@ -13,11 +13,10 @@ from tools.log import logger, WasabiLog
 pid = "/tmp/engine.pid"
 
 
-@WasabiLog
 def setParams(payload, env):
     template = payload['payload']['template']
     dynamodb_template = get_dy_template(template)
-    logger.info(f"Dados_Dynamodb: {dynamodb_template}")
+    logger.info(f"Lendo template da pipeline do dynamodb")
     pipeline_stages = dynamodb_template.get('pipeline')
     estrutura = dynamodb_template.get('structure')
     dependencias = dynamodb_template.get('depends')
@@ -39,14 +38,13 @@ def setParams(payload, env):
         'structure': estrutura,
         'depends': dependencias
     }
-    logger.info(f'Params: {template_params}')
+    logger.info(f'Parametros definidos para criacao do template')
     return template_params
 
 
-@WasabiLog
 def save_s3_send_sqs(template_params, requestID, file_template, event):
     bucket = s3_bucket.split('.')[0].replace('https://', '')
-    logger.info(f'Enviando template para o bucket {bucket},{file_template}')
+    logger.info(f'Enviando template para o bucket {bucket}')
     if upload_file_s3(bucket, file_template):
         f_tp = file_template.split('/')[-1]
         f_template = f"{s3_bucket}{f_tp}"
@@ -60,36 +58,38 @@ def save_s3_send_sqs(template_params, requestID, file_template, event):
             f"Mensagem Enviada para Fila: {filas['deploy']}, RequestId: {msg['requestID']}")
         logger.info(f"Mensagem: {msg}")
         sqs_send(filas['deploy'], msg)
-        logger.info(
-            f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {msg['requestID']}")
-        sqs_delete(event)
 
 
-def main():
-    while True:
-        #        try:
-        for event in sqs_receive(filas['processing']):
-            payload = json.loads(event.body)
-            requestID = payload['requestID']
-            logger.info(f'Event: {event.body}')
+def process_templates():
+    for event in sqs_receive(filas['processing']):
+        payload = json.loads(event.body)
+        requestID = payload['requestID']
+        logger.info(f'Event: {event.body}')
 
-            # Template Base
-            codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
-            codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
-            for envs in payload['payload']['pipeline'].keys():
-                template_params = setParams(payload, envs)
-                pipeline = NewTemplate(
-                    codepipeline_roles, codebuild_role, DevSecOps_Role)
-                file_template = pipeline.generate(tp=template_params)
-                logger.info(f'File Template: {file_template}')
-                save_s3_send_sqs(template_params, requestID,
-                                 file_template, event)
-
- #       except Exception as error:
- #           logger.warning(f'Error: {error}, Event: {requestID}')
- #       time.sleep(polling_time)
+        # Template Base
+        codebuild_role = f"arn:aws:iam::{payload['account']}:role/{RoleCodeBuild}"
+        codepipeline_roles = f"arn:aws:iam::{payload['account']}:role/{RoleCodePipeline}"
+        for envs in payload['payload']['pipeline'].keys():
+            template_params = setParams(payload, envs)
+            pipeline = NewTemplate(
+                codepipeline_roles, codebuild_role, DevSecOps_Role)
+            file_template = pipeline.generate(tp=template_params)
+            logger.info(f'Template gerado com sucesso')
+            save_s3_send_sqs(template_params, requestID,
+                             file_template, event)
+            logger.info(
+                f"Deletando Mensagem da Fila: {filas['processing']}, RequestId: {requestID}")
+            sqs_delete(event)
+        return file_template
 
 
-#daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
-# daemon.start()
-main()
+if __name__ == "__main__":
+    def main():
+        while True:
+            try:
+                process_templates()
+            except Exception as error:
+                logger.warning(f'Error: {error}')
+            time.sleep(polling_time)
+    daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
+    daemon.start()

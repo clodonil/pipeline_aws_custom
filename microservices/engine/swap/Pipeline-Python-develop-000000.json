@@ -826,6 +826,59 @@
                                     }
                                 ],
                                 "RunOrder": 3
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "PrimarySource": "App",
+                                    "ProjectName": "normalizacao"
+                                },
+                                "InputArtifacts": [
+                                    {
+                                        "Name": "App"
+                                    }
+                                ],
+                                "Name": "Normalizacao",
+                                "OutputArtifacts": [
+                                    {
+                                        "Name": "Normalizacao"
+                                    }
+                                ],
+                                "RunOrder": 1
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Invoke",
+                                    "Owner": "AWS",
+                                    "Provider": "Lambda",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "FunctionName": "Agendamento1",
+                                    "UserParameters": "paramerters"
+                                },
+                                "InputArtifacts": [],
+                                "Name": "Rodalambda",
+                                "RoleArn": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                                "RunOrder": 2
+                            },
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Approval",
+                                    "Owner": "AWS",
+                                    "Provider": "Manual",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "CustomData": "Voc\u00ea aprova a entrada desta vers\u00e3o?"
+                                },
+                                "Name": "Gonogo",
+                                "RunOrder": 4
                             }
                         ],
                         "Name": "Continuous_Integration"
@@ -1079,6 +1132,59 @@
                 "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
                 "Source": {
                     "BuildSpec": "../01/python/3.7/testunit/buildspec.yml",
+                    "Type": "CODEPIPELINE"
+                },
+                "TimeoutInMinutes": 10,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "SG"
+                        }
+                    ],
+                    "Subnets": [
+                        {
+                            "Ref": "PrivateSubnetOne"
+                        },
+                        {
+                            "Ref": "PrivateSubnetTwo"
+                        }
+                    ],
+                    "VpcId": {
+                        "Ref": "VPCID"
+                    }
+                }
+            },
+            "Type": "AWS::CodeBuild::Project"
+        },
+        "normalizacao": {
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "Cache": {
+                    "Location": {
+                        "Fn::Sub": "${AWS::AccountId}-cache"
+                    },
+                    "Modes": [
+                        "LOCAL_CUSTOM_CACHE"
+                    ],
+                    "Type": "S3"
+                },
+                "EncryptionKey": {
+                    "Ref": "KMSKeyArn"
+                },
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_SMALL",
+                    "EnvironmentVariables": [],
+                    "Image": "aws/codebuild/standard:2.0",
+                    "ImagePullCredentialsType": "CODEBUILD",
+                    "PrivilegedMode": "true",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Name": "normalizacao",
+                "ServiceRole": "arn:aws:iam::033921349789:role/RoleCodeBuildRole",
+                "Source": {
+                    "BuildSpec": "pipeline/buildspec_normalizacao.yml",
                     "Type": "CODEPIPELINE"
                 },
                 "TimeoutInMinutes": 10,

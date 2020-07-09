@@ -790,22 +790,16 @@ class TestCodePipeline:
             source1 = pipeline.check_is_not_codebuild(
                 'Source', template_pipeline)
             source2 = pipeline.check_is_not_codebuild(
-                {'Source::custom': [{'RepositoryName': 'Tools'}]}, template_pipeline)
-            source3 = pipeline.check_is_not_codebuild(
                 'Build', template_pipeline)
+            source3 = pipeline.check_is_not_codebuild(
+                'Agendamento1', template_pipeline)
             source4 = pipeline.check_is_not_codebuild(
-                {'App::custom': [{'RepositoryName': 'Tools'}]}, template_pipeline)
-            source5 = pipeline.check_is_not_codebuild(
                 'AprovacaoPO', template_pipeline)
-            source6 = pipeline.check_is_not_codebuild(
-                {'Aprovacao::custom': [{'RepositoryName': 'Tools'}]}, template_pipeline)
 
             assert source1 == True
-            assert source2 == True
-            assert source3 == False
+            assert source2 == False
+            assert source3 == True
             assert source4 == True
-            assert source5 == True
-            assert source6 == True
 
     def test_deve_retornar_pipeline_master(self, params, imageCustom, payloads):
         for pipe in params['templates']:
@@ -916,3 +910,52 @@ class TestCodePipeline:
                 for actions in l_actions:
                     for confs in actions['Actions']:
                         assert 'runorder' not in confs['Configuration']
+
+    def test_deve_validar_os_stages_customizados_action_InvokeLambda_Custom_Approval(self, params, payloads, imageCustom):
+        """
+        Esse teste tem que validar se o campo runorder inserido no template foi removido.
+
+        """
+        for name_template in params['templates']:
+            for env in ['develop']:
+                ftemplate = self.create_pipeline(
+                    name_template, env, imageCustom)
+                env_ = env.capitalize()
+                pipe_name = f'PipelinePython{env_}'
+
+                l_stages = ftemplate['Resources'][pipe_name]['Properties']
+                for stages in l_stages['Stages']:
+                    print(stages['Name'])
+                    if 'source' == stages['Name'].lower():
+                        assert len(stages['Actions']) == 2
+                        assert 'sharedlibrary' == stages['Actions'][0]['Name'].lower(
+                        )
+                        assert 'pipeline-python' == stages['Actions'][1]['Name'].lower()
+
+                    elif 'continuous_integration' == stages['Name'].lower():
+                        assert len(stages['Actions']) == 11
+                        assert 'controlversion' == stages['Actions'][0]['Name'].lower(
+                        )
+                        assert 'sonar' == stages['Actions'][2]['Name'].lower()
+                        assert 'testunit' == stages['Actions'][3]['Name'].lower(
+                        )
+                        assert 'build' == stages['Actions'][4]['Name'].lower()
+                        assert 'aqua' == stages['Actions'][5]['Name'].lower(
+                        )
+                        assert 'auditapp' == stages['Actions'][6]['Name'].lower(
+                        )
+                        assert 'parametersapp' == stages['Actions'][7]['Name'].lower(
+                        )
+                        assert 'normalizacao' == stages['Actions'][8]['Name'].lower(
+                        )
+                        assert 'rodalambda' == stages['Actions'][9]['Name'].lower(
+                        )
+                        assert 'gonogo' == stages['Actions'][10]['Name'].lower(
+                        )
+
+                    elif 'deploydev' == stages['Name'].lower():
+                        assert len(stages['Actions']) == 2
+                        assert 'publishecrdev' == stages['Actions'][0]['Name'].lower(
+                        )
+                        assert 'deployecsdev' == stages['Actions'][1]['Name'].lower(
+                        )

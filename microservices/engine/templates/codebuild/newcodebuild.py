@@ -2,7 +2,7 @@ from troposphere.codebuild import (
     Artifacts, Environment, Source, Project, VpcConfig, ProjectCache)
 from troposphere import Ref, Sub
 from tools.config import version
-from tools.log import WasabiLog
+from tools.log import WasabiLog, logger
 
 
 class NewCodeBuild:
@@ -100,6 +100,7 @@ class NewCodeBuild:
 
     @WasabiLog
     def ImageCustom(self, title, imagecustom, runtime):
+        logger.info(f"Verificando se existe imagem customizada: {title}")
         if title in imagecustom:
             image = imagecustom[title][runtime] if runtime in imagecustom[title] else imagecustom[title]['all']
         else:

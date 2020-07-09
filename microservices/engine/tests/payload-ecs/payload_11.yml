@@ -8,7 +8,22 @@ Parameter:
 pipeline:
     develop:
         - Source
-        - Continuous_Integration
+        - Continuous_Integration::custom:
+            - Rodalambda:
+                - type: InvokeLambda
+                - FunctionName: Agendamento1
+                - UserParameters: paramerters
+                - InputArtifacts: []
+                - RoleArn: arn:aws:iam::033921349789:role/RoleCodeBuildRole
+                - runorder: 2
+            - normalizacao:
+                - type: codebuild
+                - source: App
+                - runorder: 1   
+            - GonoGo:
+                - type: Approval
+                - CustomData: Você aprova a entrada desta versão?
+                - runorder: 4
         - DeployDev
     master:
         - Source

@@ -92,24 +92,30 @@ class NewTemplate:
 
     def getparams_codebuild(self, list_yaml):
         retorno = {}
-        for params in list_yaml:
-            if 'source' in params:
-                if isinstance(params['source'], list):
-                    retorno['source'] = [item.title()
-                                         for item in params['source']]
-                else:
-                    retorno['source'] = params['source'].title()
+        type_ = ' '.join([k.get('type') if k.get('type') !=
+                          None else '' for k in list_yaml]).replace(' ', '')
+        if type_.lower() == 'codebuild':
+            for params in list_yaml:
+                if 'source' in params:
+                    if isinstance(params['source'], list):
+                        retorno['source'] = [item.title()
+                                             for item in params['source']]
+                    else:
+                        retorno['source'] = params['source'].title()
 
-            elif 'runorder' in params:
-                retorno['runorder'] = str(params['runorder'])
-            elif 'imagecustom' in params:
-                retorno['imagemcustom'] = params['imagecustom']
-            elif 'environment' in params:
-                env = {}
-                if ('environment' in params) and (params.get('environment') is not None):
-                    for dic_params in params['environment']:
-                        env.update(dic_params)
-                retorno['env'] = env
+                elif 'runorder' in params:
+                    retorno['runorder'] = str(params['runorder'])
+                elif 'imagecustom' in params:
+                    retorno['imagemcustom'] = params['imagecustom']
+                elif 'environment' in params:
+                    env = {}
+                    if ('environment' in params) and (params.get('environment') is not None):
+                        for dic_params in params['environment']:
+                            env.update(dic_params)
+                    retorno['env'] = env
+        else:
+            for params in list_yaml:
+                retorno.update(params)
         return retorno
 
     def codebuild_mandatory(self, buildName, pipeline_template):
@@ -122,17 +128,6 @@ class NewTemplate:
                 if buildName in action:
                     return True
         return retorno
-
-    # def return_type_template_custom(self, pipeline_template):
-    #     retorno = False
-    #     for pipe in pipeline_template:
-    #         if pipe.lower() != 'source' and pipe.lower() != 'source::custom':
-    #             for confs in pipeline_template[pipe]:
-    #                 stage_name = ''.join(confs.keys())
-    #                 if name.lower() == stage_name.lower():
-    #                     types = ' '.join([confs[k]['type'] for k in confs])
-    #                     break
-    #     return retorno
 
     def return_type_pipeline_template(self, name, pipeline_template):
         types = 'None'
@@ -151,22 +146,15 @@ class NewTemplate:
                 codebuild, pipeline_template)
             if types.lower() != 'codebuild':
                 check = True
-        elif isinstance(codebuild, dict):
-            name_custom_stage = list(codebuild.keys())[0]
-            custom = name_custom_stage.split('::')
-            if custom[0].lower() != 'custom':
-                types = self.return_type_pipeline_template(
-                    custom[0], pipeline_template)
-                if types.lower() != 'codebuild':
-                    check = True
-            elif custom[1].lower() != 'custom':
-                print(custom[1], pipeline_template)
 
-                types = self.return_type_pipeline_template(
-                    custom[1], pipeline_template)
-                if types.lower() != 'codebuild':
-                    check = True
         return check
+
+    def check_is_not_codebuild_custom(self, name, template):
+        retorno = False
+        types = template[name][0]['type']
+        if types.lower() != 'codebuild':
+            retorno = True
+        return retorno
 
     def check_source(self, name):
 
@@ -237,25 +225,28 @@ class NewTemplate:
                                         'App')] = params['source']
                                     l_codebuild_template[temp_name]['PrimarySource'] = params['source']
                         else:
-                            if isinstance(params['source'], list):
-                                primarysource = params['source'][0]
-                            else:
-                                primarysource = params['source']
+                            # Entra se for codebuild
+                            if not self.check_is_not_codebuild_custom(
+                                    temp_name, list_yaml):
 
-                            configuration = {
-                                temp_name: {
-                                    'ProjectName': temp_name,
-                                    'PrimarySource': primarysource,
-                                    'InputArtifacts': params['source'],
-                                    'runorder': params['runorder']
-                                }}
-                            stages_temp.append(configuration)
-                            envs = []
-                            if 'env' in params:
-                                envs.append(params.get('env'))
-                            list_codebuild.append(codebuild.create_codebuild(
-                                temp_name, temp_name, envs, params.get('imagemcustom')))
+                                if isinstance(params['source'], list):
+                                    primarysource = params['source'][0]
+                                else:
+                                    primarysource = params['source']
 
+                                configuration = {
+                                    temp_name: {
+                                        'ProjectName': temp_name,
+                                        'PrimarySource': primarysource,
+                                        'InputArtifacts': params['source'],
+                                        'runorder': params['runorder']
+                                    }}
+                                stages_temp.append(configuration)
+                                envs = []
+                                if 'env' in params:
+                                    envs.append(params.get('env'))
+                                list_codebuild.append(codebuild.create_codebuild(
+                                    temp_name, temp_name, envs, params.get('imagemcustom')))
                     # Adicionando os codebuild do padrao
                     tstage = custom[0]
                     t_build_template = [
@@ -270,7 +261,6 @@ class NewTemplate:
                 # Customizando o stage
 
                 elif custom[0].lower() == 'custom':
-                    print(custom)
                     stage_custom_used = True
                     stage_name = f'{cont_stage}.{action_custom}-{custom[1]}'
                     action_custom += 1
@@ -352,6 +342,7 @@ class NewTemplate:
                     stages.append(pipeline.create_stage('Source', l_stage))
                 else:
                     l_stage = []
+                    # print(pipeline_stages[t_stage])
                     for stg in pipeline_stages[t_stage]:
                         for name_stg in stg:
                             name_stg = name_stg.lower()
@@ -397,9 +388,12 @@ class NewTemplate:
         types = ['InvokeLambda', 'Approval']
         template_action = {}
         pipeline = NewPipeline()
+
+        # Buscando o invokelambda e approval no template base e criando o action
         for type_ in types:
             actions = self.check_type_action(
                 stages, pipeline_template, type_)
+
             for key in actions:
                 for action in actions[key]:
                     name = ' '.join(action.keys())
@@ -409,6 +403,7 @@ class NewTemplate:
                     template_action[name.lower()] = pipeline.create_action(
                         name.capitalize(), int(runorder), configuration, type_)
 
+        # Criando Actions com codebuild
         for code in list_codebuild:
             title = code.title.lower()
             configuration = 0
@@ -424,6 +419,33 @@ class NewTemplate:
             configuration['ProjectName'] = code.Name
             template_action[title] = pipeline.create_action(
                 title.capitalize(), int(runorder), configuration, 'CodeBuild')
+
+        # Action custom
+        for action in stages:
+            if isinstance(action, dict):
+                index_action = ' '.join(action.keys())
+                custom = index_action.split('::')
+                if custom[-1].lower() == 'custom' and custom[0].lower() != 'source':
+                    # print(stage[index_stage])
+
+                    for confs in action[index_action]:
+                        name = ' '.join(confs.keys())
+                        params = self.getparams_codebuild(
+                            confs[name])
+                        type_ = params.get('type')
+                        if type_ != None:
+                            configuration = params
+                            runorder = params.pop('runorder')
+                            params.pop('type')
+                            template_action[name.lower()] = pipeline.create_action(
+                                name.capitalize(), int(runorder), configuration, type_)
+
+                            tstage = custom[0]
+                            t_build_template = [
+                                item for item in pipeline_template if item.split('-')[1] == tstage][0]
+                            action_custom = [{name: {'ProjectName': name}}]
+                            pipeline_template[t_build_template].extend(
+                                action_custom)
         return template_action
 
     def create_depends(self, projeto_name, env, deps):
