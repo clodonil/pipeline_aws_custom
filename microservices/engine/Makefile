@@ -28,8 +28,8 @@ coverage:
 
 test:
 	pytest --verbose --color=yes -x
-	coverage run --source=. -m pytest
-	coverage report -m
+	#coverage run --source=. -m pytest
+	#coverage report -m
 
 lint:
 	flake8 --ignore E305,E501 --exclude .git,__pycache__
