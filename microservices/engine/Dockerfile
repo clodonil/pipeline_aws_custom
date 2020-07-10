@@ -1,6 +1,6 @@
-FROM python:3.7-alpine as base
+FROM python:3.8-alpine as base
 
-#RUN apk update && apk add build-base gcc
+RUN apk update && apk add build-base gcc libressl-dev musl-dev libffi-dev
 
 COPY . /app
 WORKDIR /app
