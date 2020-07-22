@@ -1,5 +1,3 @@
-# from engine import setParams
-# from engine import process_templates
 import engine
 from tools.config import filas, dynamodb
 from tools.sqs import sqs_send, sqs_receive
@@ -133,6 +131,46 @@ class TestEngine:
                     'Pipeline-Python-develop-payload_5.yml.json',
                     'Pipeline-Python-develop-payload_6.yml.json',
                     'Pipeline-Python-master-payload_1.yml.json'
+                ]
+                s3 = boto3.resource('s3')
+                my_bucket = s3.Bucket(bucket)
+                for object_summary in my_bucket.objects.filter():
+                    print("=====>", object_summary.key)
+                    assert object_summary.key in lista_pipelines
+
+    @mock_s3
+    @mock_sqs
+    def test_validar_funcao_run(self):
+        self.create_sqs()
+        s3 = self.create_bucket()
+        self.carga_do_template_da_pipeline_na_tabela_dynamodb()
+        bucket = s3_bucket.split('.')[0].replace('https://', '')
+        payloads = ['payload-ecs']
+        payload_files = [
+            'payload_1.yml',
+        ]
+
+        for payload in payloads:
+            for filename in payload_files:
+                path_filename = f"tests/{payload}/{filename}"
+                f_template = open(path_filename)
+                yml_template = f_template.read()
+                f_template.close()
+                json_template = change_yml_to_json(yml_template)
+                send_payload = {'payload': json_template,
+                                'requestID': 'xxxx-xxxx-xxxx', 'account': filename}
+                sqs_send(filas['processing'], send_payload)
+
+                # criar a pipeline
+                template_name = engine.run()
+
+                print(template_name)
+
+                # Verificando se o template foi criado no bucket
+                lista_pipelines = [
+                    'Pipeline-Python-develop-payload_1.yml.json',
+                    'Pipeline-Python-master-payload_1.yml.json'
+
                 ]
                 s3 = boto3.resource('s3')
                 my_bucket = s3.Bucket(bucket)

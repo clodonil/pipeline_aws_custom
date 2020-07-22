@@ -164,8 +164,9 @@ class NewTemplate:
         elif isinstance(name, dict):
             name_ = ''.join(name.keys())
 
-            if name_.lower() == 'source::custom':
+            if name_.lower() == 'source::custom' or name_.lower() == 'source':
                 return True
+
         return False
 
     def generate_codebuild(self, runtime, pipeline_template, stages, params, env, imageCustom):
@@ -307,16 +308,26 @@ class NewTemplate:
         action['Source'] = [pipeline.create_action(
             'SharedLibrary', "1", shared_configuration, 'Source')]
         for t_codebuild in stages:
-            if 'Source' in t_codebuild or 'Source::custom' in t_codebuild:
-                if t_codebuild == 'Source':
+            if isinstance(t_codebuild, str):
+                source_ = t_codebuild
+            else:
+                source_ = ''.join(t_codebuild.keys())
+            if 'source' == source_.lower() or 'source::custom' == source_.lower():
+                if isinstance(t_codebuild, str):
                     configuration = {'RepositoryName': reponame,
                                      'BranchName': env, 'OutputArtifacts': 'App'}
-                if 'Source::custom' in t_codebuild:
-                    configuration = {}
-                    for config in t_codebuild['Source::custom']:
-                        configuration.update(config)
-                    if 'BranchName' not in configuration:
-                        configuration.update({'BranchName': env})
+                elif isinstance(t_codebuild, dict):
+                    if 'source' == source_.lower():
+                        branch = t_codebuild[source_][0]['BranchName']
+                        configuration = {'RepositoryName': reponame,
+                                         'BranchName': branch, 'OutputArtifacts': 'App'}
+
+                    elif 'source::custom' in source_.lower():
+                        configuration = {}
+                        for config in t_codebuild['Source::custom']:
+                            configuration.update(config)
+                        if 'BranchName' not in configuration:
+                            configuration.update({'BranchName': env})
                 action['Source'].append(
                     pipeline.create_action(configuration['RepositoryName'], "1", configuration, 'Source'))
         return action

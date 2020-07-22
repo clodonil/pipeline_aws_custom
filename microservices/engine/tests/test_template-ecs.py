@@ -809,11 +809,11 @@ class TestCodePipeline:
             print(cf['Resources'].keys())
             assert len(cf['Resources']) == 7
 
-    def create_pipeline(self, name_template, env, imageCustom):
+    def create_pipeline(self, name_template, env, imageCustom, payload):
         template_pipeline = self.load_template(name_template, env)
         estrutura = self.load_template('structure', env)
         depends = self.load_template('depends', env)
-        dados = self.gettemplate('payload_11.yml', env)
+        dados = self.gettemplate(payload, env)
         codepipeline_role = "arn:aws:iam::033921349789:role/RoleCodepipelineRole"
         codebuild_role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
         DevSecOps_Role = "arn:aws:iam::033921349789:role/RoleCodeBuildRole"
@@ -846,7 +846,7 @@ class TestCodePipeline:
         for name_template in params['templates']:
             env = 'master'
             ftemplate = self.create_pipeline(
-                name_template, env, imageCustom)
+                name_template, env, imageCustom, 'payload_11.yml')
             env_ = env.capitalize()
             pipe_name = f'PipelinePython{env_}'
             l_actions = ftemplate['Resources']['PipelinePythonMaster']['Properties']['Stages']
@@ -865,7 +865,7 @@ class TestCodePipeline:
         for name_template in params['templates']:
             for env in ['develop', 'master']:
                 ftemplate = self.create_pipeline(
-                    name_template, env, imageCustom)
+                    name_template, env, imageCustom, 'payload_11.yml')
                 env_ = env.capitalize()
                 pipe_name = f'PipelinePython{env_}'
                 l_actions = ftemplate['Resources'][pipe_name]['Properties']['Stages']
@@ -882,7 +882,7 @@ class TestCodePipeline:
         for name_template in params['templates']:
             for env in ['develop', 'master']:
                 ftemplate = self.create_pipeline(
-                    name_template, env, imageCustom)
+                    name_template, env, imageCustom, 'payload_11.yml')
                 env_ = env.capitalize()
                 pipe_name = f'PipelinePython{env_}'
                 l_actions = ftemplate['Resources'][pipe_name]['Properties']['Stages']
@@ -900,7 +900,7 @@ class TestCodePipeline:
         for name_template in params['templates']:
             for env in ['develop', 'master']:
                 ftemplate = self.create_pipeline(
-                    name_template, env, imageCustom)
+                    name_template, env, imageCustom, 'payload_11.yml')
                 env_ = env.capitalize()
                 pipe_name = f'PipelinePython{env_}'
 
@@ -919,7 +919,7 @@ class TestCodePipeline:
         for name_template in params['templates']:
             for env in ['develop']:
                 ftemplate = self.create_pipeline(
-                    name_template, env, imageCustom)
+                    name_template, env, imageCustom, 'payload_11.yml')
                 env_ = env.capitalize()
                 pipe_name = f'PipelinePython{env_}'
 
@@ -959,3 +959,28 @@ class TestCodePipeline:
                         )
                         assert 'deployecsdev' == stages['Actions'][1]['Name'].lower(
                         )
+
+    def test_deve_validar_customizacao_da_branch_do_projeto(self, params, payloads, imageCustom):
+        """
+        Esse teste tem que validar se o campo runorder inserido no template foi removido.
+
+        """
+        for name_template in params['templates']:
+            for env in ['develop', 'master']:
+                ftemplate = self.create_pipeline(
+                    name_template, env, imageCustom, 'payload_12.yml')
+                env_ = env.capitalize()
+                pipe_name = f'PipelinePython{env_}'
+
+                l_actions = ftemplate['Resources'][pipe_name]['Properties']['Stages']
+                cont = 0
+                runorder = False
+                for actions in l_actions:
+                    for confs in actions['Actions']:
+                        if confs['ActionTypeId']['Category'].lower() == 'source':
+                            print(confs)
+                            if 'SharedLibrary' != confs['Name']:
+                                if env == 'develop':
+                                    assert confs['Configuration']['BranchName'] == 'feature-teste'
+                                else:
+                                    assert confs['Configuration']['BranchName'] == 'master'

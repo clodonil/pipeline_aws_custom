@@ -82,14 +82,17 @@ def process_templates():
             sqs_delete(event)
         return file_template
 
+def run():
+    try:
+        process_templates()
+    except Exception as error:
+        logger.warning(f'Error: {error}')
+    time.sleep(polling_time)
 
 if __name__ == "__main__":
     def main():
         while True:
-            try:
-                process_templates()
-            except Exception as error:
-                logger.warning(f'Error: {error}')
-            time.sleep(polling_time)
+            run()
+    
     daemon = Daemonize(app="engine", pid=pid, action=main, foreground=True)
     daemon.start()

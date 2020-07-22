@@ -8,9 +8,17 @@
     pipeline:
         develop:
             - Source:
-                - BranchName: development
+                - BranchName: feature-teste
             - Continuous_Integration
             - DeployDev
+        master:
+            - Source
+            - Continuous_Integration
+            - DeployHomol
+            - Test
+            - Aprovacao
+            - Agendamento
+            - DeployProd
     callback:
         protocolo: email
         endpoint: clodonil@nisled.org
